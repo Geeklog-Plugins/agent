@@ -19,6 +19,10 @@ foreach ($iterator as $file) {
         continue;
     }
 
+    if (realpath($path) === __FILE__) {
+        continue;
+    }
+
     $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
     if ($extension === 'php' || $extension === 'inc') {
         $files[] = $path;
