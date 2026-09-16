@@ -50,7 +50,7 @@ $LANG_confignames['agent'] = array(
     'enabled'           => 'Enable Agent runtime',
     'providers_enabled' => 'Enabled providers (comma-separated)',
     'llms_enabled'      => 'Enable public llms discovery',
-    'site_description'  => 'Short site description for agents',
+    'site_description'  => 'Short site description for agents (optional; defaults to Geeklog Meta Description, then site slogan)',
     'recent_limit'      => 'Recent resources per provider'
 );
 
