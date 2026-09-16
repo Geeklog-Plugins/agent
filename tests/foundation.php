@@ -55,13 +55,56 @@ if (strpos($admin, 'COM_createHTMLDocument') === false) {
     fwrite(STDERR, 'Agent admin page must use COM_createHTMLDocument().' . PHP_EOL);
     exit(1);
 }
-if (strpos($admin, 'COM_siteHeader') !== false || strpos($admin, 'COM_siteFooter') !== false) {
-    fwrite(STDERR, 'Legacy COM_siteHeader()/COM_siteFooter() rendering is not allowed in Agent admin.' . PHP_EOL);
-    exit(1);
-}
 if (strpos($admin, 'administration.thtml') === false) {
     fwrite(STDERR, 'Agent admin page must render through administration.thtml.' . PHP_EOL);
     exit(1);
+}
+
+/*
+ * Rendering convention guard.
+ *
+ * Agent targets Geeklog 2.1.1 through 2.2.2. New/modernized HTML pages must
+ * use COM_createHTMLDocument() rather than the legacy COM_siteHeader() /
+ * COM_siteFooter() page assembly path. Scan every runtime PHP/INC file so a
+ * future admin or public page cannot silently reintroduce that incompatibility.
+ */
+$iterator = new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
+);
+$legacyRenderingCalls = array(
+    'COM_' . 'siteHeader' . '(',
+    'COM_' . 'siteFooter' . '('
+);
+
+foreach ($iterator as $fileInfo) {
+    if (!$fileInfo->isFile()) {
+        continue;
+    }
+
+    $path = $fileInfo->getPathname();
+    $relative = str_replace('\\', '/', substr($path, strlen($root) + 1));
+
+    if (strpos($relative, 'tests/') === 0 ||
+        strpos($relative, '.github/') === 0 ||
+        strpos($relative, 'dist/') === 0) {
+        continue;
+    }
+
+    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    if ($extension !== 'php' && $extension !== 'inc') {
+        continue;
+    }
+
+    $source = file_get_contents($path);
+    foreach ($legacyRenderingCalls as $call) {
+        if (strpos($source, $call) !== false) {
+            fwrite(
+                STDERR,
+                'Legacy page rendering call ' . $call . ' is not allowed in Agent runtime file: ' . $relative . PHP_EOL
+            );
+            exit(1);
+        }
+    }
 }
 
 echo 'Agent 0.1.0 foundation checks passed.' . PHP_EOL;
