@@ -34,6 +34,11 @@ function plugin_initconfig_agent()
     AGENT_configAddGroup($c, 'providers', 1);
     $c->add('providers_enabled', $_AGENT_DEFAULT['providers_enabled'], 'text', 0, 1, null, 10, true, 'agent', 1);
 
+    AGENT_configAddGroup($c, 'discovery', 2);
+    $c->add('llms_enabled', $_AGENT_DEFAULT['llms_enabled'], 'select', 0, 2, 0, 10, true, 'agent', 2);
+    $c->add('site_description', $_AGENT_DEFAULT['site_description'], 'text', 0, 2, null, 20, true, 'agent', 2);
+    $c->add('recent_limit', $_AGENT_DEFAULT['recent_limit'], 'text', 0, 2, null, 30, true, 'agent', 2);
+
     return true;
 }
 
