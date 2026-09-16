@@ -6,6 +6,19 @@
  * @package Agent
  */
 
+function AGENT_jsonDate($value)
+{
+    if ($value === null || $value === '') {
+        return '';
+    }
+
+    if (is_numeric($value)) {
+        return gmdate('c', (int) $value);
+    }
+
+    return trim((string) $value);
+}
+
 /**
  * Prepare one normalized resource for public JSON output.
  *
@@ -41,6 +54,17 @@ function AGENT_jsonResourceData($resource, $includeContent = true)
 
     if (isset($data['excerpt']) && function_exists('AGENT_discoveryText')) {
         $data['excerpt'] = AGENT_discoveryText($data['excerpt']);
+    }
+
+    foreach (array('created', 'modified') as $dateKey) {
+        if (isset($data[$dateKey])) {
+            $dateValue = AGENT_jsonDate($data[$dateKey]);
+            if ($dateValue === '') {
+                unset($data[$dateKey]);
+            } else {
+                $data[$dateKey] = $dateValue;
+            }
+        }
     }
 
     if ($includeContent && !empty($resource['content'])) {
