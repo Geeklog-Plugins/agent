@@ -43,3 +43,6 @@ jobs:
 
       - name: Check site description fallbacks
         run: php tests/site_description.php
+
+      - name: Check admin language coverage
+        run: php tests/admin_language.php
