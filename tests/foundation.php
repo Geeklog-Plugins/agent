@@ -174,8 +174,9 @@ if (strpos($json, 'AGENT_buildResourceJson') === false ||
     fwrite(STDERR, 'Agent public JSON resource/collection path is incomplete.' . PHP_EOL);
     exit(1);
 }
-if (strpos($capabilities, 'AGENT_buildPublicCapabilities') === false ||
-    strpos($publicCapabilities, 'AGENT_buildPublicCapabilities') === false ||
+if (strpos($capabilities, 'AGENT_getPublicCapabilitiesData') === false ||
+    strpos($capabilities, 'AGENT_buildCapabilitiesJson') === false ||
+    strpos($publicCapabilities, 'AGENT_buildCapabilitiesJson') === false ||
     strpos($publicCapabilities, 'application/json') === false ||
     strpos($discovery, '/agent/capabilities.php') === false) {
     fwrite(STDERR, 'Agent public capability discovery path is incomplete.' . PHP_EOL);
