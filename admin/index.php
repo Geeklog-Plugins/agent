@@ -15,35 +15,32 @@ if (!SEC_hasRights('agent.admin')) {
     exit;
 }
 
-function AGENT_ADMIN_h($value)
-{
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
-}
+$T = new Template($_CONF['path'] . 'plugins/agent/templates');
+$T->set_file('page', 'administration.thtml');
+$T->set_block('page', 'runtime_row', 'runtime_rows');
 
-$display = COM_siteHeader('menu', $LANG_AGENT['admin_title']);
-$display .= COM_startBlock($LANG_AGENT['admin_title']);
-$display .= '<p>' . AGENT_ADMIN_h($LANG_AGENT['read_only_notice']) . '</p>';
-
-$display .= '<p><a href="' . AGENT_ADMIN_h($_CONF['site_admin_url'] . '/configuration.php?conf_group=agent') . '">'
-    . AGENT_ADMIN_h($LANG_AGENT['configuration']) . '</a></p>';
+$T->set_var(array(
+    'read_only_notice'    => htmlspecialchars($LANG_AGENT['read_only_notice'], ENT_QUOTES, 'UTF-8'),
+    'configuration_url'   => htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php?conf_group=agent', ENT_QUOTES, 'UTF-8'),
+    'configuration_label' => htmlspecialchars($LANG_AGENT['configuration'], ENT_QUOTES, 'UTF-8'),
+    'runtime_label'       => htmlspecialchars($LANG_AGENT['runtime'], ENT_QUOTES, 'UTF-8')
+));
 
 $runtime = AGENT_getRuntimeCapabilities();
-$display .= '<h2>' . AGENT_ADMIN_h($LANG_AGENT['runtime']) . '</h2>';
-$display .= '<table class="admin-list" style="width:100%">';
+$runtime[$LANG_AGENT['site_namespace']] = AGENT_getSiteNamespace();
+$runtime[$LANG_AGENT['cache_path']] = AGENT_getCachePath();
+
 foreach ($runtime as $name => $value) {
     if (is_bool($value)) {
         $value = $value ? $LANG_AGENT['available'] : $LANG_AGENT['unavailable'];
     }
-    $display .= '<tr><td>' . AGENT_ADMIN_h($name) . '</td><td>'
-        . AGENT_ADMIN_h($value) . '</td></tr>';
+
+    $T->set_var(array(
+        'runtime_name'  => htmlspecialchars((string) $name, ENT_QUOTES, 'UTF-8'),
+        'runtime_value' => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8')
+    ));
+    $T->parse('runtime_rows', 'runtime_row', true);
 }
-$display .= '<tr><td>' . AGENT_ADMIN_h($LANG_AGENT['site_namespace']) . '</td><td>'
-    . AGENT_ADMIN_h(AGENT_getSiteNamespace()) . '</td></tr>';
-$display .= '<tr><td>' . AGENT_ADMIN_h($LANG_AGENT['cache_path']) . '</td><td>'
-    . AGENT_ADMIN_h(AGENT_getCachePath()) . '</td></tr>';
-$display .= '</table>';
 
-$display .= COM_endBlock();
-$display .= COM_siteFooter();
-
-COM_output($display);
+$content = $T->finish($T->parse('output', 'page'));
+COM_output(COM_createHTMLDocument($content, array('pagetitle' => $LANG_AGENT['admin_title'])));
