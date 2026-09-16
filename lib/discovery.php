@@ -11,6 +11,9 @@
 
 function AGENT_discoveryText($value)
 {
+    if (function_exists('AGENT_removeNonContentMarkup')) {
+        $value = AGENT_removeNonContentMarkup($value);
+    }
     $value = html_entity_decode(strip_tags((string) $value), ENT_QUOTES, 'UTF-8');
     $value = preg_replace('/\[[A-Za-z][A-Za-z0-9_-]*:[^\]\r\n]*\]/u', ' ', $value);
     $value = preg_replace('/\[image(?:\d+|X)\]/iu', ' ', $value);
@@ -50,9 +53,6 @@ function AGENT_discoveryProviderLabel($provider)
     return isset($labels[$provider]) ? $labels[$provider] : ucfirst((string) $provider);
 }
 
-/**
- * Public URL for the richer Markdown representation of one resource.
- */
 function AGENT_discoveryMarkdownUrl($provider, $id)
 {
     global $_CONF;
