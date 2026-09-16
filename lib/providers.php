@@ -100,6 +100,26 @@ function AGENT_getProviderCapabilities($provider)
 }
 
 /**
+ * Common Item Info fields requested from owning providers.
+ */
+function AGENT_getProviderItemFields()
+{
+    return array(
+        'id',
+        'title',
+        'url',
+        'description',
+        'date-created',
+        'date-modified',
+        'uid',
+        'author',
+        'hits',
+        'type',
+        'subtype'
+    );
+}
+
+/**
  * Convert a PLG_getItemInfo return value to named fields.
  */
 function AGENT_mapItemInfoResult($fields, $result)
@@ -156,19 +176,7 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
 
     $catalog = AGENT_getProviderCatalog();
     $definition = $catalog[$provider];
-    $fields = array(
-        'id',
-        'title',
-        'url',
-        'description',
-        'date-created',
-        'date-modified',
-        'uid',
-        'author',
-        'hits',
-        'type',
-        'subtype'
-    );
+    $fields = AGENT_getProviderItemFields();
 
     $result = PLG_getItemInfo(
         $definition['geeklog_type'],
@@ -191,6 +199,68 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
         $raw,
         array('id' => (string) $id)
     );
+}
+
+/**
+ * Read a collection through Geeklog's Item Info '*' convention.
+ *
+ * Options are passed through to the owning provider so it can enforce its own
+ * supported filters/order while preserving ACL and publication rules.
+ */
+function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
+{
+    $resources = array();
+    if (!AGENT_providerAvailable($provider)) {
+        return $resources;
+    }
+
+    if (!in_array('content.collection', AGENT_getProviderCapabilities($provider), true)) {
+        return $resources;
+    }
+
+    if (!is_array($options)) {
+        $options = array();
+    }
+
+    if (isset($options['limit'])) {
+        $options['limit'] = max(1, min(100, (int) $options['limit']));
+    }
+
+    $catalog = AGENT_getProviderCatalog();
+    $definition = $catalog[$provider];
+    $fields = AGENT_getProviderItemFields();
+
+    $result = PLG_getItemInfo(
+        $definition['geeklog_type'],
+        '*',
+        implode(',', $fields),
+        (int) $uid,
+        $options
+    );
+
+    if (!is_array($result)) {
+        return $resources;
+    }
+
+    $capabilities = AGENT_getProviderCapabilities($provider);
+    foreach ($result as $item) {
+        $raw = AGENT_mapItemInfoResult($fields, $item);
+        if (empty($raw) || empty($raw['id']) || empty($raw['url'])) {
+            continue;
+        }
+
+        $raw['capabilities'] = $capabilities;
+        $resource = AGENT_normalizeResource(
+            $provider,
+            $definition['resource_type'],
+            $raw
+        );
+        if ($resource !== false) {
+            $resources[] = $resource;
+        }
+    }
+
+    return $resources;
 }
 
 /**
