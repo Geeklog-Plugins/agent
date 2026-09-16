@@ -62,6 +62,7 @@ jobs:
           test -f package/agent/lib/discovery.php
           test -f package/agent/lib/markdown.php
           test -f package/agent/lib/json.php
+          test -f package/agent/lib/hub.php
           test -f package/agent/lib/capabilities.php
 
           if find package/agent -mindepth 1 -name '.*' -print -quit | grep -q .; then
@@ -105,6 +106,7 @@ jobs:
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/discovery.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/markdown.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/json.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/hub.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/capabilities.php'
 
           if unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print; found=1 } } END { exit found ? 0 : 1 }'; then
