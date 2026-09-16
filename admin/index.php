@@ -19,11 +19,22 @@ $T = new Template($_CONF['path'] . 'plugins/agent/templates');
 $T->set_file('page', 'administration.thtml');
 $T->set_block('page', 'runtime_row', 'runtime_rows');
 
+$siteUrl = isset($_CONF['site_url']) ? rtrim($_CONF['site_url'], '/') : '';
+$discoveryTestUrl = $siteUrl !== '' ? $siteUrl . '/llms.txt' : '/llms.txt';
+$discoveryDirectUrl = $siteUrl !== '' ? $siteUrl . '/agent/llms.php' : '/agent/llms.php';
+
 $T->set_var(array(
-    'read_only_notice'    => htmlspecialchars($LANG_AGENT['read_only_notice'], ENT_QUOTES, 'UTF-8'),
-    'configuration_url'   => htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php?conf_group=agent', ENT_QUOTES, 'UTF-8'),
-    'configuration_label' => htmlspecialchars($LANG_AGENT['configuration'], ENT_QUOTES, 'UTF-8'),
-    'runtime_label'       => htmlspecialchars($LANG_AGENT['runtime'], ENT_QUOTES, 'UTF-8')
+    'read_only_notice'         => htmlspecialchars($LANG_AGENT['read_only_notice'], ENT_QUOTES, 'UTF-8'),
+    'configuration_url'        => htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php?conf_group=agent', ENT_QUOTES, 'UTF-8'),
+    'configuration_label'      => htmlspecialchars($LANG_AGENT['configuration'], ENT_QUOTES, 'UTF-8'),
+    'discovery_setup_label'    => htmlspecialchars($LANG_AGENT['discovery_setup'], ENT_QUOTES, 'UTF-8'),
+    'discovery_setup_intro'    => htmlspecialchars($LANG_AGENT['discovery_setup_intro'], ENT_QUOTES, 'UTF-8'),
+    'discovery_rewrite_rule'   => htmlspecialchars($LANG_AGENT['discovery_rewrite_rule'], ENT_QUOTES, 'UTF-8'),
+    'discovery_test_url'       => htmlspecialchars($discoveryTestUrl, ENT_QUOTES, 'UTF-8'),
+    'discovery_test_label'     => htmlspecialchars($LANG_AGENT['discovery_test'], ENT_QUOTES, 'UTF-8'),
+    'discovery_direct_url'     => htmlspecialchars($discoveryDirectUrl, ENT_QUOTES, 'UTF-8'),
+    'discovery_direct_label'   => htmlspecialchars($LANG_AGENT['discovery_direct'], ENT_QUOTES, 'UTF-8'),
+    'runtime_label'            => htmlspecialchars($LANG_AGENT['runtime'], ENT_QUOTES, 'UTF-8')
 ));
 
 $runtime = AGENT_getRuntimeCapabilities();
