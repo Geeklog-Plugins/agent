@@ -181,6 +181,9 @@ function AGENT_buildLlmsText()
         $lines[] = '';
         $lines[] = '- [Home](' . $siteUrl . '/)';
         $lines[] = '- [XML sitemap](' . $siteUrl . '/sitemap.xml)';
+        if (function_exists('AGENT_buildCapabilitiesJson')) {
+            $lines[] = '- [Agent capabilities](' . $siteUrl . '/agent/capabilities.php)';
+        }
         $lines[] = '';
     }
 
