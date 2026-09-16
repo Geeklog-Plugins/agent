@@ -3,8 +3,9 @@
 /**
  * Agent for Geeklog plugin API callbacks and foundation helpers.
  *
- * 0.1.0 intentionally contains no content-provider SQL and no external
- * provider/client dependency.
+ * Agent deliberately contains no content-provider SQL and no external
+ * provider/client dependency. Content access goes through Geeklog contracts
+ * and is normalized before any future output adapter consumes it.
  *
  * @package Agent
  */
@@ -17,6 +18,8 @@ global $_CONF, $_AGENT_CONF;
 
 $agent_path = $_CONF['path'] . 'plugins/agent/';
 require_once $agent_path . 'config.php';
+require_once $agent_path . 'lib/resource.php';
+require_once $agent_path . 'lib/providers.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
 if (file_exists($agent_langfile)) {
@@ -65,9 +68,9 @@ function plugin_chkVersion_agent()
 }
 
 /**
- * 0.1.0 has no persistent schema migration. This callback is deliberately
- * conservative so future upgrades can add site-scoped migrations without
- * turning file deployment into an implicit migration.
+ * 0.x currently has no persistent schema migration. This callback is
+ * deliberately conservative so future upgrades can add site-scoped
+ * migrations without turning file deployment into an implicit migration.
  */
 function plugin_upgrade_agent()
 {
@@ -98,6 +101,8 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['plg_item_saved'] = function_exists('PLG_itemSaved');
     $capabilities['plg_item_deleted'] = function_exists('PLG_itemDeleted');
     $capabilities['configuration_manager'] = class_exists('config');
+    $capabilities['normalized_resource_model'] = function_exists('AGENT_normalizeResource');
+    $capabilities['provider_layer'] = function_exists('AGENT_getProviderCatalog');
 
     return $capabilities;
 }
@@ -152,4 +157,13 @@ function AGENT_getConfig($key, $default)
     }
 
     return $default;
+}
+
+/**
+ * Effective Agent enable flag. This makes the visible 0.x configuration
+ * setting correspond to actual runtime behavior.
+ */
+function AGENT_isEnabled()
+{
+    return (int) AGENT_getConfig('enabled', 1) === 1;
 }
