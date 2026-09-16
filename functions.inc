@@ -5,7 +5,7 @@
  *
  * Agent deliberately contains no content-provider SQL and no external
  * provider/client dependency. Content access goes through Geeklog contracts
- * and is normalized before any future output adapter consumes it.
+ * and is normalized before any output adapter consumes it.
  *
  * @package Agent
  */
@@ -20,6 +20,7 @@ $agent_path = $_CONF['path'] . 'plugins/agent/';
 require_once $agent_path . 'config.php';
 require_once $agent_path . 'lib/resource.php';
 require_once $agent_path . 'lib/providers.php';
+require_once $agent_path . 'lib/discovery.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
 if (file_exists($agent_langfile)) {
@@ -103,16 +104,13 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['configuration_manager'] = class_exists('config');
     $capabilities['normalized_resource_model'] = function_exists('AGENT_normalizeResource');
     $capabilities['provider_layer'] = function_exists('AGENT_getProviderCatalog');
+    $capabilities['public_llms_discovery'] = function_exists('AGENT_buildLlmsText');
 
     return $capabilities;
 }
 
 /**
  * Create a deterministic identifier for the active Geeklog site.
- *
- * It intentionally uses already-selected Geeklog context and never performs
- * hostname routing. The value is suitable for cache keys and site-local
- * persistent namespaces, but is not a credential or public site identifier.
  */
 function AGENT_getSiteNamespace()
 {
@@ -129,7 +127,6 @@ function AGENT_getSiteNamespace()
 
 /**
  * Return the future cache root for the active site without creating it.
- * Directory creation and full cache lifecycle belong to a later milestone.
  */
 function AGENT_getCachePath()
 {
@@ -145,8 +142,7 @@ function AGENT_getCachePath()
 }
 
 /**
- * Read one persisted Agent setting with a safe fallback for shared-file
- * deployments where a site's configuration has not yet gained a future key.
+ * Read one persisted Agent setting with a safe fallback.
  */
 function AGENT_getConfig($key, $default)
 {
@@ -160,8 +156,7 @@ function AGENT_getConfig($key, $default)
 }
 
 /**
- * Effective Agent enable flag. This makes the visible 0.x configuration
- * setting correspond to actual runtime behavior.
+ * Effective Agent enable flag.
  */
 function AGENT_isEnabled()
 {
