@@ -25,7 +25,7 @@ $discoveryDirectUrl = $siteUrl !== '' ? $siteUrl . '/agent/llms.php' : '/agent/l
 
 $T->set_var(array(
     'read_only_notice'          => htmlspecialchars($LANG_AGENT['read_only_notice'], ENT_QUOTES, 'UTF-8'),
-    'configuration_url'         => htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php?conf_group=agent', ENT_QUOTES, 'UTF-8'),
+    'configuration_url'         => htmlspecialchars($_CONF['site_admin_url'] . '/configuration.php', ENT_QUOTES, 'UTF-8'),
     'configuration_label'       => htmlspecialchars($LANG_AGENT['configuration'], ENT_QUOTES, 'UTF-8'),
     'discovery_setup_label'     => htmlspecialchars($LANG_AGENT['discovery_setup'], ENT_QUOTES, 'UTF-8'),
     'discovery_setup_intro'     => htmlspecialchars($LANG_AGENT['discovery_setup_intro'], ENT_QUOTES, 'UTF-8'),
