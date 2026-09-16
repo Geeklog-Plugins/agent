@@ -69,6 +69,22 @@ function plugin_chkVersion_agent()
 }
 
 /**
+ * Automatic uninstall descriptor consumed by Geeklog core.
+ *
+ * Agent owns no database tables in 0.1.x. Geeklog core removes the plugin
+ * registration and all Configuration Manager rows for group_name "agent".
+ */
+function plugin_autouninstall_agent()
+{
+    return array(
+        'tables'     => array(),
+        'groups'     => array('Agent Admin'),
+        'features'   => array('agent.admin'),
+        'php_blocks' => array()
+    );
+}
+
+/**
  * Keep each active site's persisted Configuration Manager structure aligned
  * with the shared Agent files during staggered multisite upgrades.
  */
