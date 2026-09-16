@@ -69,19 +69,25 @@ function plugin_chkVersion_agent()
 }
 
 /**
- * 0.x currently has no persistent schema migration. This callback is
- * deliberately conservative so future upgrades can add site-scoped
- * migrations without turning file deployment into an implicit migration.
+ * Keep each active site's persisted Configuration Manager structure aligned
+ * with the shared Agent files during staggered multisite upgrades.
  */
 function plugin_upgrade_agent()
 {
-    global $_CONF;
+    global $_CONF, $_AGENT_CONF;
 
     require_once $_CONF['path'] . 'plugins/agent/autoinstall.php';
 
     if (!plugin_compatible_with_this_version_agent('agent')) {
         return 3002;
     }
+
+    require_once $_CONF['path'] . 'plugins/agent/install_defaults.php';
+    if (!AGENT_syncConfig()) {
+        return false;
+    }
+
+    $_AGENT_CONF = config::get_instance()->get_config('agent');
 
     return true;
 }
