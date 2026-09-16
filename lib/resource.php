@@ -37,6 +37,7 @@ function AGENT_normalizeResource($provider, $type, $raw, $defaults = array())
 
     $aliases = array(
         'excerpt'  => array('excerpt', 'description'),
+        'content'  => array('content', 'description'),
         'created'  => array('created', 'date-created'),
         'modified' => array('modified', 'date-modified')
     );
