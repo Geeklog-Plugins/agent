@@ -1,7 +1,10 @@
 <div class="agent-admin">
     <p>{read_only_notice}</p>
 
-    <p><a href="{configuration_url}">{configuration_label}</a></p>
+    <form method="post" action="{configuration_url}">
+        <input type="hidden" name="conf_group" value="agent"{xhtml}>
+        <button type="submit">{configuration_label}</button>
+    </form>
 
     <h2>{discovery_setup_label}</h2>
     <p>{discovery_setup_intro}</p>
