@@ -49,6 +49,8 @@ jobs:
           test -f package/agent/admin/index.php
           test -f package/agent/public_html/llms.php
           test -f package/agent/public_html/resource.php
+          test -f package/agent/public_html/resource-json.php
+          test -f package/agent/public_html/resources-json.php
           test -f package/agent/templates/administration.thtml
           test -f package/agent/language/english.php
           test -f package/agent/language/english_utf-8.php
@@ -58,6 +60,7 @@ jobs:
           test -f package/agent/lib/providers.php
           test -f package/agent/lib/discovery.php
           test -f package/agent/lib/markdown.php
+          test -f package/agent/lib/json.php
 
           if find package/agent -mindepth 1 -name '.*' -print -quit | grep -q .; then
             echo 'Error: dotfile or dot-directory found in package tree.' >&2
@@ -89,6 +92,8 @@ jobs:
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/admin/index.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/public_html/llms.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/public_html/resource.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/public_html/resource-json.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/public_html/resources-json.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/templates/administration.thtml'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/text.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/compat.php'
@@ -96,6 +101,7 @@ jobs:
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/providers.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/discovery.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/markdown.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/json.php'
 
           if unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print; found=1 } } END { exit found ? 0 : 1 }'; then
             echo 'Error: archive contains a dotfile or dot-directory.' >&2
