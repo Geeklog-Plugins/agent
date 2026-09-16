@@ -34,3 +34,6 @@ jobs:
 
       - name: Check installable foundation
         run: php tests/foundation.php
+
+      - name: Check optional Hub integration
+        run: php tests/hub.php
