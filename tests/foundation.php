@@ -8,6 +8,7 @@ $required = array(
     'functions.inc',
     'plugin.json',
     'admin/index.php',
+    'templates/administration.thtml',
     'language/english.php'
 );
 
@@ -41,12 +42,25 @@ foreach ($checks as $ok) {
 
 $autoinstall = file_get_contents($root . '/autoinstall.php');
 $functions = file_get_contents($root . '/functions.inc');
+$admin = file_get_contents($root . '/admin/index.php');
 if (strpos($autoinstall, 'agent.admin') === false || strpos($autoinstall, 'Agent Admin') === false) {
     fwrite(STDERR, 'Required Agent permission/group is missing.' . PHP_EOL);
     exit(1);
 }
 if (strpos($functions, 'AGENT_getSiteNamespace') === false || strpos($functions, 'AGENT_getRuntimeCapabilities') === false) {
     fwrite(STDERR, 'Required multisite/runtime helpers are missing.' . PHP_EOL);
+    exit(1);
+}
+if (strpos($admin, 'COM_createHTMLDocument') === false) {
+    fwrite(STDERR, 'Agent admin page must use COM_createHTMLDocument().' . PHP_EOL);
+    exit(1);
+}
+if (strpos($admin, 'COM_siteHeader') !== false || strpos($admin, 'COM_siteFooter') !== false) {
+    fwrite(STDERR, 'Legacy COM_siteHeader()/COM_siteFooter() rendering is not allowed in Agent admin.' . PHP_EOL);
+    exit(1);
+}
+if (strpos($admin, 'administration.thtml') === false) {
+    fwrite(STDERR, 'Agent admin page must render through administration.thtml.' . PHP_EOL);
     exit(1);
 }
 
