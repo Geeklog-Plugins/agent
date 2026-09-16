@@ -49,6 +49,28 @@ function AGENT_discoveryExcerpt($value, $maxLength = 300)
 }
 
 /**
+ * Escape text used inside a Markdown link label.
+ */
+function AGENT_discoveryMarkdownLabel($value)
+{
+    $value = AGENT_discoveryText($value);
+    return str_replace(array('\\', '[', ']'), array('\\\\', '\\[', '\\]'), $value);
+}
+
+/**
+ * Human-readable provider label for public discovery output.
+ */
+function AGENT_discoveryProviderLabel($provider)
+{
+    $labels = array(
+        'stories'     => 'Stories',
+        'staticpages' => 'Static Pages'
+    );
+
+    return isset($labels[$provider]) ? $labels[$provider] : ucfirst((string) $provider);
+}
+
+/**
  * Build public llms-style discovery text for the active Geeklog site.
  */
 function AGENT_buildLlmsText()
@@ -107,14 +129,14 @@ function AGENT_buildLlmsText()
         }
 
         $hasResources = true;
-        $lines[] = '### ' . ucfirst($provider);
+        $lines[] = '### ' . AGENT_discoveryProviderLabel($provider);
         $lines[] = '';
         foreach ($resources as $resource) {
             if (empty($resource['title']) || empty($resource['canonical_url'])) {
                 continue;
             }
 
-            $title = AGENT_discoveryText($resource['title']);
+            $title = AGENT_discoveryMarkdownLabel($resource['title']);
             $url = (string) $resource['canonical_url'];
             $excerpt = !empty($resource['excerpt']) ? AGENT_discoveryExcerpt($resource['excerpt']) : '';
 
