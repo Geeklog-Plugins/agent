@@ -21,6 +21,7 @@ require_once $agent_path . 'config.php';
 require_once $agent_path . 'lib/resource.php';
 require_once $agent_path . 'lib/providers.php';
 require_once $agent_path . 'lib/discovery.php';
+require_once $agent_path . 'lib/markdown.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
 if (file_exists($agent_langfile)) {
@@ -68,12 +69,6 @@ function plugin_chkVersion_agent()
     return AGENT_VERSION;
 }
 
-/**
- * Automatic uninstall descriptor consumed by Geeklog core.
- *
- * Agent owns no database tables in 0.1.x. Geeklog core removes the plugin
- * registration and all Configuration Manager rows for group_name "agent".
- */
 function plugin_autouninstall_agent()
 {
     return array(
@@ -84,10 +79,6 @@ function plugin_autouninstall_agent()
     );
 }
 
-/**
- * Keep each active site's persisted Configuration Manager structure aligned
- * with the shared Agent files during staggered multisite upgrades.
- */
 function plugin_upgrade_agent()
 {
     global $_CONF, $_AGENT_CONF;
@@ -108,10 +99,6 @@ function plugin_upgrade_agent()
     return true;
 }
 
-/**
- * Report active-runtime facts by feature detection rather than by assuming a
- * specific Geeklog minor version.
- */
 function AGENT_getRuntimeCapabilities()
 {
     $capabilities = array();
@@ -127,13 +114,11 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['normalized_resource_model'] = function_exists('AGENT_normalizeResource');
     $capabilities['provider_layer'] = function_exists('AGENT_getProviderCatalog');
     $capabilities['public_llms_discovery'] = function_exists('AGENT_buildLlmsText');
+    $capabilities['public_markdown_resources'] = function_exists('AGENT_buildResourceMarkdown');
 
     return $capabilities;
 }
 
-/**
- * Create a deterministic identifier for the active Geeklog site.
- */
 function AGENT_getSiteNamespace()
 {
     global $_CONF, $_DB_table_prefix;
@@ -147,9 +132,6 @@ function AGENT_getSiteNamespace()
     return 'agent-' . substr(hash('sha256', implode('|', $parts)), 0, 20);
 }
 
-/**
- * Return the future cache root for the active site without creating it.
- */
 function AGENT_getCachePath()
 {
     global $_CONF;
@@ -163,9 +145,6 @@ function AGENT_getCachePath()
         . 'cache' . DIRECTORY_SEPARATOR . AGENT_getSiteNamespace();
 }
 
-/**
- * Read one persisted Agent setting with a safe fallback.
- */
 function AGENT_getConfig($key, $default)
 {
     global $_AGENT_CONF;
@@ -177,9 +156,6 @@ function AGENT_getConfig($key, $default)
     return $default;
 }
 
-/**
- * Effective Agent enable flag.
- */
 function AGENT_isEnabled()
 {
     return (int) AGENT_getConfig('enabled', 1) === 1;
