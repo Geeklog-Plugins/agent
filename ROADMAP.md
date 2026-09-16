@@ -20,6 +20,8 @@ Agent consumes shared Geeklog contracts and delegates business logic to the owni
 
 Agent is intended to **replace standalone LLM-discovery scripts autonomously**, not reproduce their implementation or preserve their historical structure. Existing `llms.php`, `llm-dynamic.php`, per-host switches and hand-maintained text files are reference material for identifying useful requirements only. They are not compatibility targets.
 
+Agent's internal model must remain stable and provider-neutral. MCP, ChatGPT, REST/OpenAPI and future protocols are adapters over that model and must not define it.
+
 ---
 
 ## Compatibility target
@@ -49,8 +51,11 @@ Implementation must use the common safe PHP 5.6–8.3 subset and feature-detect 
 8. **Permissions are evaluated before exposure.** Draft/private/inaccessible content must not leak through lists, search, popularity rankings or machine endpoints.
 9. **Multisite context is mandatory.** Configuration, cache, credentials and audit data must remain site-scoped.
 10. **One normalized representation, many adapters.** Markdown, JSON, `llms.txt`, MCP and future protocols should reuse the same internal resource model.
-11. **The previous standalone LLM system is not an API contract.** Agent may improve, reorganize or omit historical output when a cleaner machine-facing representation is more useful.
-12. **Autonomy is a release requirement.** Agent 1.0 must not require the old `llms.php`, `llm-dynamic.php`, hostname registry or per-site LLM text files to operate.
+11. **Resources, Capabilities and Actions are distinct.** Resources are readable objects, Capabilities describe what the site/provider can do, and Actions are operations the current caller is authorized to trigger.
+12. **Protocol adapters must not define Agent core.** MCP, ChatGPT, REST/OpenAPI and future protocol details belong above the normalized Agent model.
+13. **Visible configuration must match implemented behavior.** Future roadmap features must not appear as active administrator controls before they exist, except read-only diagnostics.
+14. **The previous standalone LLM system is not an API contract.** Agent may improve, reorganize or omit historical output when a cleaner machine-facing representation is more useful.
+15. **Autonomy is a release requirement.** Agent 1.0 must not require the old `llms.php`, `llm-dynamic.php`, hostname registry or per-site LLM text files to operate.
 
 ---
 
@@ -61,40 +66,39 @@ Goal: create a clean Geeklog plugin skeleton that can be installed safely on the
 - Geeklog autoinstall/uninstall support;
 - plugin metadata and `plugin.json` following Memorandum conventions;
 - `agent.admin` permission and Agent Admin group;
-- Configuration Manager integration;
-- admin entry and basic status page;
+- minimal Configuration Manager integration;
+- admin entry and basic status/diagnostic page;
 - no PHP syntax newer than PHP 5.6;
 - feature detection for Geeklog 2.1.1 vs 2.2.2 APIs;
 - multisite-safe configuration loading;
-- site-scoped cache namespace;
-- initial automated compatibility checks.
+- site-scoped namespace for future cache/storage needs;
+- initial automated compatibility checks;
+- automated installable archive generation in `dist/`;
+- no file or directory beginning with `.` inside the installable archive;
+- modern page rendering through `COM_createHTMLDocument()`;
+- `.thtml` templates for significant presentation markup;
+- automated guard preventing reintroduction of `COM_siteHeader()` / `COM_siteFooter()` in Agent runtime code.
 
-Configuration groups should include at least:
+Visible configuration in 0.1.0 should remain limited to settings that already affect implemented behavior. Future Discovery, Providers, Resources, Capabilities and Cache controls should appear only when their corresponding milestone is implemented.
 
-```text
-General
-Discovery / llms.txt
-Providers
-Resources
-Capabilities
-Cache
-Security (future-ready, read-only defaults)
-```
+Diagnostic information may expose detected runtime capabilities because it reports environment state rather than enabling unfinished features.
 
 ---
 
 # 0.2.0 — Normalized resource model
 
-Goal: define the internal representation reused by every output format.
+Goal: define the internal representation reused by every output format and protocol adapter.
 
-Initial normalized fields:
+Initial normalized fields/concepts:
 
 ```text
 id
 type
 subtype
+provider
 title
 url
+canonical_url
 excerpt
 content
 language
@@ -106,6 +110,9 @@ image
 category
 topic
 hits
+visibility
+schema_version
+capabilities
 ```
 
 Not every provider must supply every field.
@@ -113,14 +120,25 @@ Not every provider must supply every field.
 Requirements:
 
 - stable `type + id` identity;
-- canonical URL;
+- explicit owning `provider`;
+- canonical URL distinct from temporary/request URLs where necessary;
 - explicit language where available;
 - clean text/content separate from theme chrome;
 - optional popularity metric normalized as `hits`;
-- permission-aware results;
+- permission-aware effective visibility/access state;
+- versionable normalized representation through `schema_version`;
+- resource/provider capabilities expressible without protocol-specific schemas;
 - support one item and collections;
 - safe handling of absent/unsupported fields;
 - no direct exposure of raw database rows.
+
+The model must distinguish:
+
+```text
+Resources     = what a machine can read or retrieve
+Capabilities  = what the site/provider/context can do
+Actions       = operations the current caller is authorized to trigger
+```
 
 Define collection options compatible with the Memorandum:
 
@@ -143,6 +161,8 @@ modified-desc
 created-desc
 hits-desc
 ```
+
+No public Markdown/JSON/MCP output is required merely to complete the normalized model milestone.
 
 ---
 
@@ -197,6 +217,8 @@ Compatibility adapters must preserve:
 
 Compatibility providers exist to bridge Geeklog/plugin API gaps, **not** to preserve the old standalone scripts.
 
+Provider-related Configuration Manager controls may be introduced in this milestone because provider discovery/selection now has real runtime behavior.
+
 ---
 
 # 0.4.0 — Autonomous public discovery
@@ -228,8 +250,8 @@ Requirements:
 - include selected main resources rather than dump the whole site;
 - include canonical sitemap/feed links where configured or discoverable;
 - include recent/popular/featured collections when useful and supported;
-- link to richer Agent Markdown/JSON resources;
-- cache output per site;
+- link to richer Agent Markdown/JSON resources when those later surfaces exist;
+- cache output per site when cache support is implemented;
 - invalidate cache when relevant configuration/content changes where practical;
 - remain useful when Hub is absent;
 - degrade gracefully when a plugin exposes only part of the interoperability contract.
@@ -245,6 +267,10 @@ featured = explicitly curated important resources
 Do not infer `featured` from modification date.
 
 The structure and wording of legacy `ecologie.txt`, `cordiste.txt` or similar files are not requirements. Site description, curated resources and dynamic discovery should be modeled natively in Agent configuration and provider data.
+
+Discovery-related Configuration Manager controls should be introduced here, when `/llms.txt` actually exists.
+
+`llms.txt` remains a discovery/curation surface, not Agent's source of truth. Agent's normalized model must remain useful if discovery conventions change in the future.
 
 ---
 
@@ -282,6 +308,8 @@ Requirements:
 - UTF-8 output;
 - cacheable public responses where appropriate.
 
+Markdown enable/disable controls should appear only from this milestone onward.
+
 ---
 
 # 0.6.0 — JSON resources and collections
@@ -313,6 +341,8 @@ Initial collection use cases:
 - selected taxonomy collections.
 
 JSON schemas should remain stable and provider-neutral.
+
+JSON enable/disable controls should appear only from this milestone onward.
 
 ---
 
@@ -351,12 +381,14 @@ Conceptual endpoint:
 
 For 1.0, expose read-only/public capabilities only unless authenticated access has explicitly been implemented.
 
-Capability metadata should be compatible with future:
+Capability metadata should be reusable by future:
 
 - JSON/OpenAPI descriptions;
 - MCP tools/resources;
 - ChatGPT Connector tool generation;
 - administration interoperability audits.
+
+Capability controls should appear in Configuration Manager only once capability discovery has real runtime behavior.
 
 ---
 
@@ -446,6 +478,8 @@ Goal: keep public machine endpoints inexpensive enough for real-world crawling a
 - optional rate limiting hooks;
 - safe diagnostics for administrators;
 - no sensitive implementation details in public errors.
+
+Cache-specific Configuration Manager controls should appear in this milestone when a cache lifecycle actually exists.
 
 ---
 
@@ -558,6 +592,8 @@ read
 
 No generic execution primitives such as SQL, PHP, shell or unrestricted filesystem operations.
 
+Authenticated configuration controls must not appear before the corresponding authenticated action model is implemented.
+
 ## Future protocol adapters
 
 Agent's internal model should be reusable by:
@@ -569,7 +605,9 @@ Agent's internal model should be reusable by:
 - automation platforms;
 - trusted custom applications.
 
-Protocol support must remain an adapter over Agent resources/capabilities rather than redefine plugin contracts.
+Protocol support must remain an adapter over Agent resources/capabilities/actions rather than redefine plugin contracts or Agent's normalized model.
+
+Agent may host optional protocol modules for deployment convenience, but protocol versioning and client-specific schemas must remain isolated from Agent core.
 
 ---
 
@@ -590,7 +628,9 @@ shared interoperability contracts
         ↓
       Agent
         ↓
-llms.txt / Markdown / JSON / capabilities / future adapters
+normalized resources / capabilities / actions
+        ↓
+llms.txt / Markdown / JSON / MCP / connectors / future adapters
 ```
 
 There must be no runtime dependency on:
