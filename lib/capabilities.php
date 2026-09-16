@@ -44,6 +44,15 @@ function AGENT_getPublicCapabilitiesData()
         );
     }
 
+    $hubCapabilities = function_exists('AGENT_getHubCapabilities')
+        ? AGENT_getHubCapabilities()
+        : array();
+    foreach ($hubCapabilities as $capability) {
+        if (!in_array($capability, $siteCapabilities, true)) {
+            $siteCapabilities[] = $capability;
+        }
+    }
+
     sort($siteCapabilities);
 
     $data = array(
@@ -57,6 +66,15 @@ function AGENT_getPublicCapabilitiesData()
         ),
         'providers' => $providers
     );
+
+    if (!empty($hubCapabilities)) {
+        sort($hubCapabilities);
+        $data['integrations'] = array(
+            'hub' => array(
+                'capabilities' => array_values($hubCapabilities)
+            )
+        );
+    }
 
     if (!empty($_CONF['site_url'])) {
         $data['canonical_site'] = rtrim((string) $_CONF['site_url'], '/') . '/';
