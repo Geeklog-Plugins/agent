@@ -4,22 +4,19 @@
  * Agent provider access built on Geeklog interoperability contracts.
  *
  * Providers remain authoritative for permissions and URL construction. Agent
- * consumes PLG_getItemInfo() and normalizes the result; it does not query
- * another plugin's tables directly.
+ * consumes PLG_getItemInfo() and normalizes the result; compatibility-only
+ * metadata fallbacks are isolated outside this provider layer.
  *
  * @package Agent
  */
 
-/**
- * Provider definitions used by the first Agent discovery layer.
- */
 function AGENT_getProviderCatalog()
 {
     return array(
         'stories' => array(
             'geeklog_type' => 'story',
             'resource_type' => 'story',
-            'label'         => 'Stories'
+            'label'         => 'Articles'
         ),
         'staticpages' => array(
             'geeklog_type' => 'staticpages',
@@ -29,9 +26,6 @@ function AGENT_getProviderCatalog()
     );
 }
 
-/**
- * Return the provider ids enabled for the active Geeklog site.
- */
 function AGENT_getEnabledProviders()
 {
     $configured = AGENT_getConfig('providers_enabled', 'stories,staticpages');
@@ -54,9 +48,6 @@ function AGENT_getEnabledProviders()
     return $providers;
 }
 
-/**
- * Report whether a provider can be queried in the active Geeklog context.
- */
 function AGENT_providerAvailable($provider)
 {
     global $_PLUGINS;
@@ -78,9 +69,6 @@ function AGENT_providerAvailable($provider)
     return is_array($_PLUGINS) && in_array($provider, $_PLUGINS, true);
 }
 
-/**
- * Describe effective read capabilities without protocol-specific schemas.
- */
 function AGENT_getProviderCapabilities($provider)
 {
     $capabilities = array();
@@ -124,14 +112,6 @@ function AGENT_getProviderItemFields()
 
 /**
  * Fields safe and inexpensive to request for a provider collection.
- *
- * Geeklog 2.1.1 Static Pages has a core bug in
- * plugin_getiteminfo_staticpages('*', ...): requesting description/excerpt
- * resets its collection accumulator to a string before using [] on it. Keep
- * collection discovery to metadata, then hydrate selected pages individually.
- *
- * Stories can expose `excerpt` directly; avoid requesting their full
- * `description` for every collection item merely to build /llms.txt.
  */
 function AGENT_getProviderCollectionFields($provider)
 {
@@ -163,9 +143,6 @@ function AGENT_getProviderCollectionFields($provider)
     return AGENT_getProviderItemFields();
 }
 
-/**
- * Convert a PLG_getItemInfo return value to named fields.
- */
 function AGENT_mapItemInfoResult($fields, $result)
 {
     if (!is_array($fields)) {
@@ -207,11 +184,20 @@ function AGENT_mapItemInfoResult($fields, $result)
 }
 
 /**
- * Read one resource through Geeklog's Item Info contract.
- *
- * Empty/denied resources return false. The owning provider remains responsible
- * for ACL checks; Agent does not bypass them.
+ * Prefer the site's editorial meta description when one exists.
  */
+function AGENT_applyEditorialExcerpt($provider, $id, &$raw)
+{
+    if (!is_array($raw) || !function_exists('AGENT_compatMetaDescription')) {
+        return;
+    }
+
+    $metaDescription = AGENT_compatMetaDescription($provider, $id);
+    if ($metaDescription !== '') {
+        $raw['excerpt'] = $metaDescription;
+    }
+}
+
 function AGENT_getProviderResource($provider, $id, $uid = 0)
 {
     if (!AGENT_providerAvailable($provider)) {
@@ -235,11 +221,11 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
         return false;
     }
 
-    // Item Info `description` is the owning provider's complete readable body.
     if (!empty($raw['description'])) {
         $raw['content'] = $raw['description'];
     }
 
+    AGENT_applyEditorialExcerpt($provider, $id, $raw);
     $raw['capabilities'] = AGENT_getProviderCapabilities($provider);
 
     return AGENT_normalizeResource(
@@ -250,9 +236,6 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
     );
 }
 
-/**
- * Sort normalized resources by modified date, newest first.
- */
 function AGENT_sortResourcesModifiedDesc(&$resources)
 {
     usort($resources, function ($a, $b) {
@@ -267,13 +250,6 @@ function AGENT_sortResourcesModifiedDesc(&$resources)
     });
 }
 
-/**
- * Read a collection through Geeklog's Item Info '*' convention.
- *
- * Options are passed through to the owning provider where supported. Agent
- * still applies its own final sort/limit because older Geeklog callbacks such
- * as Static Pages 2.1.1 ignore collection options.
- */
 function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
 {
     $resources = array();
@@ -335,15 +311,23 @@ function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
     }
 
     /*
-     * Hydrate only the selected Static Pages. A single-item Item Info request
-     * does not trigger the Geeklog 2.1.1 collection accumulator bug and keeps
-     * ACL/content ownership inside the Static Pages plugin.
+     * Only enrich already-authorized selected resources. Static Pages require
+     * single-item hydration on Geeklog 2.1.1 because requesting description in
+     * a '*' collection triggers the historical collection accumulator bug.
      */
-    if ($provider === 'staticpages') {
-        foreach ($resources as $index => $resource) {
+    foreach ($resources as $index => $resource) {
+        if ($provider === 'staticpages') {
             $detail = AGENT_getProviderResource($provider, $resource['id'], $uid);
             if (is_array($detail)) {
                 $resources[$index] = array_merge($resource, $detail);
+            }
+            continue;
+        }
+
+        if ($provider === 'stories' && function_exists('AGENT_compatMetaDescription')) {
+            $metaDescription = AGENT_compatMetaDescription($provider, $resource['id']);
+            if ($metaDescription !== '') {
+                $resources[$index]['excerpt'] = $metaDescription;
             }
         }
     }
@@ -351,9 +335,6 @@ function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
     return $resources;
 }
 
-/**
- * Expose provider state for diagnostics and later discovery output.
- */
 function AGENT_getProviderStatus()
 {
     global $_PLUGINS;
