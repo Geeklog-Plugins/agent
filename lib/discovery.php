@@ -79,6 +79,32 @@ function AGENT_discoveryJsonUrl($provider, $id)
         . '&id=' . rawurlencode((string) $id);
 }
 
+function AGENT_discoverySiteDescription()
+{
+    global $_CONF;
+
+    $description = AGENT_discoveryText(AGENT_getConfig('site_description', ''));
+    if ($description !== '') {
+        return $description;
+    }
+
+    if (isset($_CONF['meta_description'])) {
+        $description = AGENT_discoveryText($_CONF['meta_description']);
+        if ($description !== '') {
+            return $description;
+        }
+    }
+
+    if (isset($_CONF['site_slogan'])) {
+        $description = AGENT_discoveryText($_CONF['site_slogan']);
+        if ($description !== '') {
+            return $description;
+        }
+    }
+
+    return '';
+}
+
 function AGENT_buildLlmsText()
 {
     global $_CONF;
@@ -89,10 +115,7 @@ function AGENT_buildLlmsText()
 
     $siteName = isset($_CONF['site_name']) ? AGENT_discoveryText($_CONF['site_name']) : 'Geeklog site';
     $siteUrl = isset($_CONF['site_url']) ? rtrim((string) $_CONF['site_url'], '/') : '';
-    $description = AGENT_discoveryText(AGENT_getConfig('site_description', ''));
-    if ($description === '' && isset($_CONF['site_slogan'])) {
-        $description = AGENT_discoveryText($_CONF['site_slogan']);
-    }
+    $description = AGENT_discoverySiteDescription();
 
     $limit = (int) AGENT_getConfig('recent_limit', 10);
     if ($limit < 1) {
