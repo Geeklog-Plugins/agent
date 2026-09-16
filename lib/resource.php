@@ -14,15 +14,6 @@ if (!defined('AGENT_RESOURCE_SCHEMA_VERSION')) {
     define('AGENT_RESOURCE_SCHEMA_VERSION', '1');
 }
 
-/**
- * Normalize one resource without leaking provider-specific raw fields.
- *
- * @param string $provider Owning provider identifier
- * @param string $type     Provider-neutral resource type
- * @param array  $raw      Structured data returned by a provider/Geeklog API
- * @param array  $defaults Optional contextual defaults
- * @return array|false
- */
 function AGENT_normalizeResource($provider, $type, $raw, $defaults = array())
 {
     if (!is_array($raw)) {
@@ -77,7 +68,17 @@ function AGENT_normalizeResource($provider, $type, $raw, $defaults = array())
         'capabilities'   => array()
     );
 
+    /*
+     * schema_version, provider and type are Agent-owned normalized identity
+     * fields. Provider callbacks may return empty/different values for fields
+     * named "type"; those must never override the normalized resource type.
+     */
+    $identityFields = array('schema_version', 'provider', 'type');
+
     foreach ($resource as $field => $value) {
+        if (in_array($field, $identityFields, true)) {
+            continue;
+        }
         if (array_key_exists($field, $defaults)) {
             $resource[$field] = $defaults[$field];
         }
@@ -112,10 +113,6 @@ function AGENT_normalizeResource($provider, $type, $raw, $defaults = array())
     return $resource;
 }
 
-/**
- * Normalize a collection returned by a provider.
- * Invalid records are skipped rather than exposed partially.
- */
 function AGENT_normalizeResourceCollection($provider, $type, $items, $defaults = array())
 {
     $resources = array();
@@ -133,9 +130,6 @@ function AGENT_normalizeResourceCollection($provider, $type, $items, $defaults =
     return $resources;
 }
 
-/**
- * Stable internal identity suitable for caches, relations and adapters.
- */
 function AGENT_getResourceIdentity($resource)
 {
     if (!is_array($resource) || empty($resource['provider']) ||
