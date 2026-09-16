@@ -40,3 +40,6 @@ jobs:
 
       - name: Check HTML machine discovery
         run: php tests/html_discovery.php
+
+      - name: Check site description fallbacks
+        run: php tests/site_description.php
