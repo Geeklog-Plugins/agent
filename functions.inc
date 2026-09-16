@@ -27,6 +27,7 @@ require_once $agent_path . 'lib/markdown.php';
 require_once $agent_path . 'lib/json.php';
 require_once $agent_path . 'lib/hub.php';
 require_once $agent_path . 'lib/capabilities.php';
+require_once $agent_path . 'lib/html-discovery.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
 if (file_exists($agent_langfile)) {
@@ -67,6 +68,15 @@ function plugin_getadminoption_agent()
         $_CONF['site_admin_url'] . '/plugins/agent/index.php',
         0
     );
+}
+
+function plugin_getheadercode_agent()
+{
+    if (!function_exists('AGENT_buildHtmlDiscoveryHead')) {
+        return '';
+    }
+
+    return AGENT_buildHtmlDiscoveryHead();
 }
 
 function plugin_chkVersion_agent()
@@ -123,6 +133,7 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['public_json_resources'] = function_exists('AGENT_buildResourceJson');
     $capabilities['public_json_collections'] = function_exists('AGENT_buildCollectionJson');
     $capabilities['public_capability_discovery'] = function_exists('AGENT_buildCapabilitiesJson');
+    $capabilities['html_machine_discovery'] = function_exists('AGENT_buildHtmlDiscoveryHead');
     $capabilities['hub_integration'] = function_exists('AGENT_getHubCapabilities');
     $capabilities['hub_installed'] = function_exists('AGENT_hubInstalled') ? AGENT_hubInstalled() : false;
 
