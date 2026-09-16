@@ -118,6 +118,12 @@ if (strpos($providers, "'staticpages'") === false || strpos($providers, "'geeklo
     fwrite(STDERR, 'Static Pages provider definition is missing.' . PHP_EOL);
     exit(1);
 }
+if (strpos($providers, 'AGENT_getProviderCollectionFields') === false ||
+    strpos($providers, "if ($provider === 'staticpages')") === false ||
+    strpos($providers, "'date-modified'") === false) {
+    fwrite(STDERR, 'Geeklog 2.1.1-safe Static Pages collection field guard is missing.' . PHP_EOL);
+    exit(1);
+}
 if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem') !== false ||
     strpos($providers, '$_TABLES') !== false) {
     fwrite(STDERR, 'Initial Agent providers must not query Geeklog/plugin tables directly.' . PHP_EOL);
