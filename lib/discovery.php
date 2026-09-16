@@ -11,12 +11,41 @@
 
 /**
  * Collapse presentation HTML into safe single-line discovery text.
+ *
+ * Unexpanded Geeklog autotags are removed from discovery output. They are
+ * presentation/runtime instructions rather than useful machine-readable prose.
  */
 function AGENT_discoveryText($value)
 {
     $value = html_entity_decode(strip_tags((string) $value), ENT_QUOTES, 'UTF-8');
+
+    // Remove unresolved Geeklog-style autotags such as [forms:feedback].
+    $value = preg_replace('/\[[A-Za-z][A-Za-z0-9_-]*:[^\]\r\n]*\]/u', ' ', $value);
+
+    // Remove unresolved image autotags such as [image1] or [imageX].
+    $value = preg_replace('/\[image(?:\d+|X)\]/iu', ' ', $value);
+
     $value = preg_replace('/\s+/u', ' ', $value);
     return trim($value);
+}
+
+/**
+ * Return a compact discovery excerpt without cutting normal output excessively.
+ */
+function AGENT_discoveryExcerpt($value, $maxLength = 300)
+{
+    $value = AGENT_discoveryText($value);
+    $maxLength = max(80, min(1000, (int) $maxLength));
+
+    if ($value === '' || strlen($value) <= $maxLength) {
+        return $value;
+    }
+
+    if (function_exists('COM_truncate')) {
+        return COM_truncate($value, $maxLength, '...');
+    }
+
+    return rtrim(substr($value, 0, $maxLength - 3)) . '...';
 }
 
 /**
@@ -87,7 +116,7 @@ function AGENT_buildLlmsText()
 
             $title = AGENT_discoveryText($resource['title']);
             $url = (string) $resource['canonical_url'];
-            $excerpt = !empty($resource['excerpt']) ? AGENT_discoveryText($resource['excerpt']) : '';
+            $excerpt = !empty($resource['excerpt']) ? AGENT_discoveryExcerpt($resource['excerpt']) : '';
 
             $line = '- [' . $title . '](' . $url . ')';
             if ($excerpt !== '') {
