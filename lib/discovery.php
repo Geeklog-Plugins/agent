@@ -66,6 +66,19 @@ function AGENT_discoveryMarkdownUrl($provider, $id)
         . '&id=' . rawurlencode((string) $id);
 }
 
+function AGENT_discoveryJsonUrl($provider, $id)
+{
+    global $_CONF;
+
+    if (!function_exists('AGENT_buildResourceJson') || empty($_CONF['site_url'])) {
+        return '';
+    }
+
+    return rtrim((string) $_CONF['site_url'], '/')
+        . '/agent/resource-json.php?provider=' . rawurlencode((string) $provider)
+        . '&id=' . rawurlencode((string) $id);
+}
+
 function AGENT_buildLlmsText()
 {
     global $_CONF;
@@ -134,14 +147,25 @@ function AGENT_buildLlmsText()
             $excerpt = !empty($resource['excerpt']) ? AGENT_discoveryExcerpt($resource['excerpt']) : '';
             $markdownUrl = isset($resource['id'])
                 ? AGENT_discoveryMarkdownUrl($provider, $resource['id']) : '';
+            $jsonUrl = isset($resource['id'])
+                ? AGENT_discoveryJsonUrl($provider, $resource['id']) : '';
 
             $line = '- [' . $title . '](' . $url . ')';
             if ($excerpt !== '') {
                 $line .= ' — ' . $excerpt;
             }
+
+            $representations = array();
             if ($markdownUrl !== '') {
-                $line .= ' ([Markdown](' . $markdownUrl . '))';
+                $representations[] = '[Markdown](' . $markdownUrl . ')';
             }
+            if ($jsonUrl !== '') {
+                $representations[] = '[JSON](' . $jsonUrl . ')';
+            }
+            if (!empty($representations)) {
+                $line .= ' (' . implode(' · ', $representations) . ')';
+            }
+
             $lines[] = $line;
         }
         $lines[] = '';
