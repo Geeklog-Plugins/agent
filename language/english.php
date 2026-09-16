@@ -7,12 +7,12 @@
 $LANG_AGENT = array(
     'plugin_name'          => 'Agent',
     'admin_title'          => 'Agent Administration',
-    'status'               => 'Foundation status',
+    'status'               => 'Agent status',
     'configuration'        => 'Configuration',
     'runtime'              => 'Runtime',
     'site_namespace'       => 'Site namespace',
     'cache_path'           => 'Future site cache path',
-    'read_only_notice'     => 'Agent is preparing a provider-neutral machine access layer. Public llms.txt, Markdown and JSON endpoints are not exposed yet.',
+    'read_only_notice'     => 'Agent exposes an initial public llms-style discovery endpoint at /agent/llms.php. Markdown and JSON resource endpoints are not exposed yet.',
     'access_denied'        => 'You do not have permission to administer Agent.',
     'available'            => 'Available',
     'unavailable'          => 'Unavailable'
@@ -29,17 +29,22 @@ $LANG_configsubgroups['agent'] = array(
 
 $LANG_tab['agent'] = array(
     'tab_general'   => 'General',
-    'tab_providers' => 'Providers'
+    'tab_providers' => 'Providers',
+    'tab_discovery' => 'Discovery / llms'
 );
 
 $LANG_fs['agent'] = array(
     'fs_general'   => 'General',
-    'fs_providers' => 'Providers'
+    'fs_providers' => 'Providers',
+    'fs_discovery' => 'Discovery / llms'
 );
 
 $LANG_confignames['agent'] = array(
     'enabled'           => 'Enable Agent runtime',
-    'providers_enabled' => 'Enabled providers (comma-separated)'
+    'providers_enabled' => 'Enabled providers (comma-separated)',
+    'llms_enabled'      => 'Enable public llms discovery',
+    'site_description'  => 'Short site description for agents',
+    'recent_limit'      => 'Recent resources per provider'
 );
 
 /* Geeklog Configuration Manager expects label => stored value. */
