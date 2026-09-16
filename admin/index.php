@@ -22,7 +22,6 @@ $T->set_block('page', 'runtime_row', 'runtime_rows');
 
 $siteUrl = isset($_CONF['site_url']) ? rtrim($_CONF['site_url'], '/') : '';
 $agentEnabled = AGENT_isEnabled();
-$llmsEnabled = (int) AGENT_getConfig('llms_enabled', 1) === 1;
 $providers = function_exists('AGENT_getEnabledProviders') ? AGENT_getEnabledProviders() : array();
 $providersLabel = !empty($providers) ? implode(', ', $providers) : $LANG_AGENT['not_available'];
 $recentLimit = (int) AGENT_getConfig('recent_limit', 10);
@@ -47,12 +46,12 @@ $collectionUrl = ($siteUrl !== '' ? $siteUrl : '')
     . '&order=modified-desc';
 
 $T->set_var(array(
+    'admin_title'                => htmlspecialchars($LANG_AGENT['admin_title'], ENT_QUOTES, 'UTF-8'),
     'admin_intro'                => htmlspecialchars($LANG_AGENT['admin_intro'], ENT_QUOTES, 'UTF-8'),
     'read_only_notice'           => htmlspecialchars($LANG_AGENT['read_only_notice'], ENT_QUOTES, 'UTF-8'),
     'status_label'               => htmlspecialchars($LANG_AGENT['status'], ENT_QUOTES, 'UTF-8'),
     'status_value'               => htmlspecialchars($agentEnabled ? $LANG_AGENT['operational'] : $LANG_AGENT['disabled'], ENT_QUOTES, 'UTF-8'),
     'status_class'               => $agentEnabled ? 'agent-status-ok' : 'agent-status-off',
-    'site_context_label'         => htmlspecialchars($LANG_AGENT['site_context'], ENT_QUOTES, 'UTF-8'),
     'active_site_label'          => htmlspecialchars($LANG_AGENT['active_site'], ENT_QUOTES, 'UTF-8'),
     'active_site_value'          => htmlspecialchars($siteUrl !== '' ? $siteUrl : $LANG_AGENT['not_available'], ENT_QUOTES, 'UTF-8'),
     'enabled_providers_label'    => htmlspecialchars($LANG_AGENT['enabled_providers'], ENT_QUOTES, 'UTF-8'),
@@ -70,6 +69,7 @@ $T->set_var(array(
     'discovery_setup_intro'      => htmlspecialchars($LANG_AGENT['discovery_setup_intro'], ENT_QUOTES, 'UTF-8'),
     'discovery_rewrite_rule'     => htmlspecialchars($LANG_AGENT['discovery_rewrite_rule'], ENT_QUOTES, 'UTF-8'),
     'discovery_rewrite_example'  => htmlspecialchars($LANG_AGENT['discovery_rewrite_example'], ENT_QUOTES, 'UTF-8'),
+    'discovery_rewrite_example_label' => htmlspecialchars($LANG_AGENT['discovery_rewrite_example_label'], ENT_QUOTES, 'UTF-8'),
     'discovery_rewrite_note'     => htmlspecialchars($LANG_AGENT['discovery_rewrite_note'], ENT_QUOTES, 'UTF-8'),
     'discovery_test_url'         => htmlspecialchars($discoveryTestUrl, ENT_QUOTES, 'UTF-8'),
     'discovery_test_label'       => htmlspecialchars($LANG_AGENT['discovery_test'], ENT_QUOTES, 'UTF-8'),
