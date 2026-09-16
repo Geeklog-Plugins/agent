@@ -25,6 +25,7 @@ require_once $agent_path . 'lib/providers.php';
 require_once $agent_path . 'lib/discovery.php';
 require_once $agent_path . 'lib/markdown.php';
 require_once $agent_path . 'lib/json.php';
+require_once $agent_path . 'lib/hub.php';
 require_once $agent_path . 'lib/capabilities.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
@@ -122,6 +123,8 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['public_json_resources'] = function_exists('AGENT_buildResourceJson');
     $capabilities['public_json_collections'] = function_exists('AGENT_buildCollectionJson');
     $capabilities['public_capability_discovery'] = function_exists('AGENT_buildCapabilitiesJson');
+    $capabilities['hub_integration'] = function_exists('AGENT_getHubCapabilities');
+    $capabilities['hub_installed'] = function_exists('AGENT_hubInstalled') ? AGENT_hubInstalled() : false;
 
     return $capabilities;
 }
