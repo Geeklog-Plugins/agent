@@ -63,7 +63,7 @@ function AGENT_discoveryMarkdownLabel($value)
 function AGENT_discoveryProviderLabel($provider)
 {
     $labels = array(
-        'stories'     => 'Stories',
+        'stories'     => 'Articles',
         'staticpages' => 'Static Pages'
     );
 
