@@ -50,6 +50,7 @@ foreach ($checks as $ok) {
 $autoinstall = file_get_contents($root . '/autoinstall.php');
 $functions = file_get_contents($root . '/functions.inc');
 $admin = file_get_contents($root . '/admin/index.php');
+$configSource = file_get_contents($root . '/config.php');
 $defaults = file_get_contents($root . '/install_defaults.php');
 $language = file_get_contents($root . '/language/english.php');
 $text = file_get_contents($root . '/lib/text.php');
@@ -83,15 +84,23 @@ if (strpos($admin, 'COM_createHTMLDocument') === false || strpos($admin, 'admini
     exit(1);
 }
 
+/*
+ * Future controls may legitimately appear in install_defaults.php only inside
+ * the obsolete-key cleanup list. They are considered exposed only when they
+ * exist as active defaults or are added through Configuration Manager.
+ */
 $prematureControls = array('json_enabled', 'capabilities_enabled', 'cache_enabled', 'authenticated_access');
 foreach ($prematureControls as $control) {
-    if (strpos($defaults, $control) !== false) {
+    if (strpos($configSource, "'" . $control . "'") !== false ||
+        strpos($defaults, "->add('" . $control . "'") !== false ||
+        strpos($defaults, '->add("' . $control . '")') !== false) {
         fwrite(STDERR, 'Premature Configuration Manager control exposed: ' . $control . PHP_EOL);
         exit(1);
     }
 }
 foreach (array('llms_enabled', 'site_description', 'recent_limit') as $control) {
-    if (strpos($defaults, $control) === false) {
+    if (strpos($configSource, "'" . $control . "'") === false ||
+        strpos($defaults, "->add('" . $control . "'") === false) {
         fwrite(STDERR, 'Implemented discovery control missing: ' . $control . PHP_EOL);
         exit(1);
     }
