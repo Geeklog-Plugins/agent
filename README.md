@@ -2,43 +2,48 @@
 
 Agent is the provider-neutral machine access layer for Geeklog.
 
-It is designed to expose Geeklog content and capabilities safely to AI assistants, LLMs, agents, MCP clients, automation tools and future machine consumers without coupling content plugins to a specific provider or protocol.
+It exposes Geeklog content and capabilities to machine consumers without making Agent a second content database and without coupling Geeklog plugins to ChatGPT, Claude, Gemini, MCP or another provider/protocol.
 
-## Role
+## Architecture
 
 ```text
-Hub       = context / relationships
-Agent     = machine access layer
-Connector = client/provider adapter
+Plugin owner = data and business logic
+Hub          = context / relationships
+Agent        = machine access layer
+Connector    = client / provider adapter
 ```
 
-Agent does not own content and does not replace Hub.
+## 0.1.0 foundation
 
-Content remains owned by Geeklog Core or the plugin that created it. Hub remains responsible for relationships, pillar context, dependency graphs and integrity diagnostics. Agent exposes normalized machine-readable resources and capabilities. External Connectors translate those resources into provider-specific formats such as ChatGPT tools.
+The `develop-1.0` branch now contains the installable 0.1.0 foundation:
 
-## Initial target
+- Geeklog autoinstall metadata;
+- `agent.admin` permission and `Agent Admin` group;
+- Configuration Manager integration;
+- seven configuration groups: General, Discovery / llms.txt, Providers, Resources, Capabilities, Cache and Security;
+- runtime feature detection for Geeklog APIs;
+- active-site-derived cache namespace/path helpers;
+- minimal administration/status page;
+- static `plugin.json` metadata manifest;
+- PHP 5.6-compatible source policy and CI checks through PHP 8.3.
+
+0.1.0 deliberately does **not** implement content providers, `/llms.txt`, Markdown/JSON endpoints, Hub logic, MCP, Connector code or write APIs. Those layers are introduced by later roadmap milestones after the installable foundation is stable.
+
+## Compatibility target
 
 - Geeklog 2.1.1 through 2.2.2
 - PHP 5.6 through 8.3
 - mono-site and multisite
-- no Core modification required for the initial roadmap
-- read-only/public machine access first
+- shared plugin files with site-scoped persisted state
+- no Geeklog Core modification
 
-Initial goals include:
+## Configuration ownership
 
-- `/llms.txt` generation;
-- normalized content providers;
-- Markdown resources;
-- JSON resources;
-- recent/popular/featured collections;
-- capability discovery;
-- permission-aware output;
-- Hub integration through shared services;
-- multisite-safe configuration and cache isolation.
+Agent stores only Agent behavior/editorial settings in Geeklog Configuration Manager. Site content such as stories, static pages, topics, URLs, hits, dates and plugin relationships remains owned by Geeklog Core or the relevant plugin.
 
-Authenticated write actions, MCP and provider-specific Connectors are later layers built on the same resource/capability model.
+Agent derives site identity from the already-selected Geeklog runtime context (`$_CONF`, table prefix). It does not maintain a hostname registry or inspect sibling sites.
 
-See [ROADMAP.md](ROADMAP.md) for the development plan.
+See [ROADMAP.md](ROADMAP.md) for the staged development plan.
 
 ## Design principle
 
