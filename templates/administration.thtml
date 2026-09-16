@@ -3,6 +3,15 @@
 
     <p><a href="{configuration_url}">{configuration_label}</a></p>
 
+    <h2>{discovery_setup_label}</h2>
+    <p>{discovery_setup_intro}</p>
+    <pre><code>{discovery_rewrite_rule}</code></pre>
+    <p>
+        <a href="{discovery_test_url}" target="_blank" rel="noopener">{discovery_test_label}</a>
+        &mdash;
+        <a href="{discovery_direct_url}" target="_blank" rel="noopener">{discovery_direct_label}</a>
+    </p>
+
     <h2>{runtime_label}</h2>
     <table class="admin-list" style="width:100%">
         <!-- BEGIN runtime_row -->
