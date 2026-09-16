@@ -26,22 +26,14 @@ if (!defined('AGENT_MIN_PHP_VERSION')) {
 /**
  * Fresh-install defaults only. Runtime code must use persisted site-scoped
  * Configuration Manager values, not this array as a second source of truth.
+ *
+ * Only settings with real runtime behavior belong here. Future discovery,
+ * Markdown, JSON, capability, cache and authenticated-action controls are
+ * introduced only when those features exist.
  */
 global $_AGENT_DEFAULT;
 
 $_AGENT_DEFAULT = array(
-    'enabled'                 => 1,
-    'llms_enabled'            => 0,
-    'site_description'        => '',
-    'additional_instructions' => '',
-    'providers_enabled'       => 'stories,staticpages',
-    'recent_limit'            => 10,
-    'popular_limit'           => 10,
-    'markdown_enabled'        => 0,
-    'json_enabled'            => 0,
-    'capabilities_enabled'    => 0,
-    'cache_enabled'           => 1,
-    'cache_ttl'               => 300,
-    'public_read_only'        => 1,
-    'authenticated_access'    => 0
+    'enabled'           => 1,
+    'providers_enabled' => 'stories,staticpages'
 );
