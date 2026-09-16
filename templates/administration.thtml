@@ -5,7 +5,7 @@
 <div class="agent-admin">
     <div class="agent-admin-header">
         <div>
-            <h1>{status_label}</h1>
+            <h1>{admin_title}</h1>
             <p>{admin_intro}</p>
         </div>
         <form method="post" action="{configuration_url}">
@@ -60,7 +60,7 @@
         <pre class="agent-code"><code>{discovery_rewrite_rule}</code></pre>
         <p class="agent-muted">{discovery_rewrite_note}</p>
         <details>
-            <summary>Full rewrite example</summary>
+            <summary>{discovery_rewrite_example_label}</summary>
             <pre class="agent-code"><code>{discovery_rewrite_example}</code></pre>
         </details>
         <div class="agent-actions">
