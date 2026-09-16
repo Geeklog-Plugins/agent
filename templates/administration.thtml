@@ -6,6 +6,8 @@
     <h2>{discovery_setup_label}</h2>
     <p>{discovery_setup_intro}</p>
     <pre><code>{discovery_rewrite_rule}</code></pre>
+    <p>{discovery_rewrite_note}</p>
+    <pre><code>{discovery_rewrite_example}</code></pre>
     <p>
         <a href="{discovery_test_url}" target="_blank" rel="noopener">{discovery_test_label}</a>
         &mdash;
