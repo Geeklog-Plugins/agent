@@ -9,29 +9,15 @@
  * @package Agent
  */
 
-/**
- * Collapse presentation HTML into safe single-line discovery text.
- *
- * Unexpanded Geeklog autotags are removed from discovery output. They are
- * presentation/runtime instructions rather than useful machine-readable prose.
- */
 function AGENT_discoveryText($value)
 {
     $value = html_entity_decode(strip_tags((string) $value), ENT_QUOTES, 'UTF-8');
-
-    // Remove unresolved Geeklog-style autotags such as [forms:feedback].
     $value = preg_replace('/\[[A-Za-z][A-Za-z0-9_-]*:[^\]\r\n]*\]/u', ' ', $value);
-
-    // Remove unresolved image autotags such as [image1] or [imageX].
     $value = preg_replace('/\[image(?:\d+|X)\]/iu', ' ', $value);
-
     $value = preg_replace('/\s+/u', ' ', $value);
     return trim($value);
 }
 
-/**
- * Return a compact discovery excerpt without cutting normal output excessively.
- */
 function AGENT_discoveryExcerpt($value, $maxLength = 300)
 {
     $value = AGENT_discoveryText($value);
@@ -48,18 +34,12 @@ function AGENT_discoveryExcerpt($value, $maxLength = 300)
     return rtrim(substr($value, 0, $maxLength - 3)) . '...';
 }
 
-/**
- * Escape text used inside a Markdown link label.
- */
 function AGENT_discoveryMarkdownLabel($value)
 {
     $value = AGENT_discoveryText($value);
     return str_replace(array('\\', '[', ']'), array('\\\\', '\\[', '\\]'), $value);
 }
 
-/**
- * Human-readable provider label for public discovery output.
- */
 function AGENT_discoveryProviderLabel($provider)
 {
     $labels = array(
@@ -71,8 +51,21 @@ function AGENT_discoveryProviderLabel($provider)
 }
 
 /**
- * Build public llms-style discovery text for the active Geeklog site.
+ * Public URL for the richer Markdown representation of one resource.
  */
+function AGENT_discoveryMarkdownUrl($provider, $id)
+{
+    global $_CONF;
+
+    if (!function_exists('AGENT_buildResourceMarkdown') || empty($_CONF['site_url'])) {
+        return '';
+    }
+
+    return rtrim((string) $_CONF['site_url'], '/')
+        . '/agent/resource.php?provider=' . rawurlencode((string) $provider)
+        . '&id=' . rawurlencode((string) $id);
+}
+
 function AGENT_buildLlmsText()
 {
     global $_CONF;
@@ -139,10 +132,15 @@ function AGENT_buildLlmsText()
             $title = AGENT_discoveryMarkdownLabel($resource['title']);
             $url = (string) $resource['canonical_url'];
             $excerpt = !empty($resource['excerpt']) ? AGENT_discoveryExcerpt($resource['excerpt']) : '';
+            $markdownUrl = isset($resource['id'])
+                ? AGENT_discoveryMarkdownUrl($provider, $resource['id']) : '';
 
             $line = '- [' . $title . '](' . $url . ')';
             if ($excerpt !== '') {
                 $line .= ' — ' . $excerpt;
+            }
+            if ($markdownUrl !== '') {
+                $line .= ' ([Markdown](' . $markdownUrl . '))';
             }
             $lines[] = $line;
         }
