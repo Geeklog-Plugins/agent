@@ -38,6 +38,7 @@ $LANG_AGENT = array(
     'discovery_setup_intro'      => 'To expose the canonical /llms.txt URL, add the Agent rewrite rule inside the existing <IfModule mod_rewrite.c> block and before Geeklog\'s generic routing rule.',
     'discovery_rewrite_rule'     => 'RewriteRule ^llms\\.txt$ /agent/llms.php [L]',
     'discovery_rewrite_example'  => "RewriteEngine On\n\n# Geeklog Agent - canonical AI discovery endpoint\nRewriteRule ^llms\\.txt$ /agent/llms.php [L]\n\n# Geeklog generic routing must remain after the Agent rule\nRewriteCond %{REQUEST_FILENAME} !-f\nRewriteCond %{REQUEST_FILENAME} !-d\nRewriteRule ^(.*)$ /index.php/$1 [L]",
+    'discovery_rewrite_example_label' => 'Full rewrite example',
     'discovery_rewrite_note'     => 'Do not place the Agent rule after Geeklog\'s generic catch-all rule, because /llms.txt would already have been routed to /index.php.',
     'discovery_test'             => 'Test /llms.txt',
     'discovery_direct'           => 'Direct Agent endpoint',
