@@ -6,13 +6,12 @@
  * @package Agent
  */
 
-/**
- * Convert provider HTML/content to clean Markdown-friendly plain text while
- * preserving paragraph boundaries and removing unresolved Geeklog autotags.
- */
 function AGENT_markdownContent($value)
 {
     $value = (string) $value;
+    if (function_exists('AGENT_removeNonContentMarkup')) {
+        $value = AGENT_removeNonContentMarkup($value);
+    }
     $value = preg_replace('/<\s*br\s*\/?\s*>/iu', "\n", $value);
     $value = preg_replace('/<\s*\/\s*(p|div|h[1-6]|li|blockquote)\s*>/iu', "\n\n", $value);
     $value = html_entity_decode(strip_tags($value), ENT_QUOTES, 'UTF-8');
@@ -29,9 +28,6 @@ function AGENT_markdownContent($value)
     return trim($value);
 }
 
-/**
- * Normalize a timestamp/date value for a readable metadata line.
- */
 function AGENT_markdownDate($value)
 {
     if ($value === null || $value === '') {
@@ -45,9 +41,6 @@ function AGENT_markdownDate($value)
     return trim((string) $value);
 }
 
-/**
- * Build one public Markdown resource from the normalized Agent model.
- */
 function AGENT_buildResourceMarkdown($provider, $id)
 {
     if (!AGENT_isEnabled()) {
