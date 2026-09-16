@@ -10,6 +10,8 @@ $required = array(
     'admin/index.php',
     'public_html/llms.php',
     'public_html/resource.php',
+    'public_html/resource-json.php',
+    'public_html/resources-json.php',
     'templates/administration.thtml',
     'language/english.php',
     'lib/text.php',
@@ -17,7 +19,8 @@ $required = array(
     'lib/resource.php',
     'lib/providers.php',
     'lib/discovery.php',
-    'lib/markdown.php'
+    'lib/markdown.php',
+    'lib/json.php'
 );
 
 foreach ($required as $path) {
@@ -58,8 +61,11 @@ $compat = file_get_contents($root . '/lib/compat.php');
 $providers = file_get_contents($root . '/lib/providers.php');
 $discovery = file_get_contents($root . '/lib/discovery.php');
 $markdown = file_get_contents($root . '/lib/markdown.php');
+$json = file_get_contents($root . '/lib/json.php');
 $publicLlms = file_get_contents($root . '/public_html/llms.php');
 $publicResource = file_get_contents($root . '/public_html/resource.php');
+$publicJsonResource = file_get_contents($root . '/public_html/resource-json.php');
+$publicJsonCollection = file_get_contents($root . '/public_html/resources-json.php');
 
 if (strpos($autoinstall, 'agent.admin') === false || strpos($autoinstall, 'Agent Admin') === false) {
     fwrite(STDERR, 'Required Agent permission/group is missing.' . PHP_EOL);
@@ -69,7 +75,7 @@ if (strpos($functions, 'AGENT_getSiteNamespace') === false || strpos($functions,
     fwrite(STDERR, 'Required multisite/runtime helpers are missing.' . PHP_EOL);
     exit(1);
 }
-foreach (array('lib/text.php', 'lib/compat.php', 'lib/resource.php', 'lib/providers.php', 'lib/discovery.php', 'lib/markdown.php') as $library) {
+foreach (array('lib/text.php', 'lib/compat.php', 'lib/resource.php', 'lib/providers.php', 'lib/discovery.php', 'lib/markdown.php', 'lib/json.php') as $library) {
     if (strpos($functions, $library) === false) {
         fwrite(STDERR, 'Agent library is not wired into runtime: ' . $library . PHP_EOL);
         exit(1);
@@ -129,9 +135,10 @@ if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem')
     exit(1);
 }
 if (strpos($compat, 'AGENT_compatMetaDescription') === false ||
+    strpos($compat, 'AGENT_compatRawContent') === false ||
     strpos($compat, 'meta_description') === false ||
     strpos($compat, 'DB_getItem') === false) {
-    fwrite(STDERR, 'Isolated meta-description compatibility helper is incomplete.' . PHP_EOL);
+    fwrite(STDERR, 'Isolated compatibility helpers are incomplete.' . PHP_EOL);
     exit(1);
 }
 if (strpos($text, 'AGENT_removeNonContentMarkup') === false || strpos($text, 'script|style|noscript|template') === false) {
@@ -142,6 +149,7 @@ if (strpos($text, 'AGENT_removeNonContentMarkup') === false || strpos($text, 'sc
 if (strpos($discovery, 'AGENT_getProviderResources') === false ||
     strpos($discovery, 'AGENT_discoveryExcerpt') === false ||
     strpos($discovery, 'AGENT_discoveryMarkdownUrl') === false ||
+    strpos($discovery, 'AGENT_discoveryJsonUrl') === false ||
     strpos($discovery, "'stories'     => 'Articles'") === false ||
     strpos($discovery, 'AGENT_removeNonContentMarkup') === false ||
     strpos($publicLlms, 'AGENT_buildLlmsText') === false ||
@@ -156,9 +164,22 @@ if (strpos($markdown, 'AGENT_buildResourceMarkdown') === false ||
     fwrite(STDERR, 'Agent public Markdown resource path is incomplete.' . PHP_EOL);
     exit(1);
 }
+if (strpos($json, 'AGENT_buildResourceJson') === false ||
+    strpos($json, 'AGENT_buildCollectionJson') === false ||
+    strpos($json, 'content_format') === false ||
+    strpos($publicJsonResource, 'AGENT_buildResourceJson') === false ||
+    strpos($publicJsonResource, 'application/json') === false ||
+    strpos($publicJsonCollection, 'AGENT_buildCollectionJson') === false ||
+    strpos($publicJsonCollection, 'application/json') === false) {
+    fwrite(STDERR, 'Agent public JSON resource/collection path is incomplete.' . PHP_EOL);
+    exit(1);
+}
 
 require_once $root . '/lib/text.php';
 require_once $root . '/lib/resource.php';
+require_once $root . '/lib/discovery.php';
+require_once $root . '/lib/markdown.php';
+require_once $root . '/lib/json.php';
 $sample = AGENT_normalizeResource(
     'stories',
     'story',
@@ -166,7 +187,7 @@ $sample = AGENT_normalizeResource(
         'id' => 'example',
         'title' => 'Example',
         'url' => 'https://example.test/article',
-        'description' => 'Full body',
+        'description' => '<h2>Full body</h2><ul><li>Item</li></ul>',
         'excerpt' => 'Summary',
         'type' => '',
         'date-created' => '2026-01-01',
@@ -179,7 +200,7 @@ if (!is_array($sample) ||
     $sample['provider'] !== 'stories' ||
     $sample['type'] !== 'story' ||
     $sample['excerpt'] !== 'Summary' ||
-    $sample['content'] !== 'Full body' ||
+    $sample['content'] !== '<h2>Full body</h2><ul><li>Item</li></ul>' ||
     $sample['created'] !== '2026-01-01' ||
     $sample['modified'] !== '2026-01-02' ||
     $sample['canonical_url'] !== 'https://example.test/article' ||
@@ -191,6 +212,14 @@ if (!is_array($sample) ||
 $cleaned = AGENT_removeNonContentMarkup('<p>Hello</p><script>(adsbygoogle=[]).push({});</script><p>World</p>');
 if (strpos($cleaned, 'adsbygoogle') !== false || strpos($cleaned, 'Hello') === false || strpos($cleaned, 'World') === false) {
     fwrite(STDERR, 'Agent non-content markup cleanup failed.' . PHP_EOL);
+    exit(1);
+}
+$jsonSample = AGENT_jsonResourceData($sample, true);
+if (!is_array($jsonSample) ||
+    !isset($jsonSample['content_format']) || $jsonSample['content_format'] !== 'markdown' ||
+    strpos($jsonSample['content'], '### Full body') === false ||
+    strpos($jsonSample['content'], '- Item') === false) {
+    fwrite(STDERR, 'Agent JSON resource adapter failed.' . PHP_EOL);
     exit(1);
 }
 
@@ -218,4 +247,4 @@ foreach ($iterator as $fileInfo) {
     }
 }
 
-echo 'Agent 0.x foundation/resource/provider/discovery/markdown checks passed.' . PHP_EOL;
+echo 'Agent 0.x foundation/resource/provider/discovery/markdown/json checks passed.' . PHP_EOL;
