@@ -28,11 +28,41 @@ function AGENT_getProviderCatalog()
 }
 
 /**
+ * Return the provider ids enabled for the active Geeklog site.
+ */
+function AGENT_getEnabledProviders()
+{
+    $configured = AGENT_getConfig('providers_enabled', 'stories,staticpages');
+    if (is_array($configured)) {
+        $values = $configured;
+    } else {
+        $values = explode(',', (string) $configured);
+    }
+
+    $catalog = AGENT_getProviderCatalog();
+    $providers = array();
+    foreach ($values as $value) {
+        $provider = strtolower(trim((string) $value));
+        if ($provider !== '' && isset($catalog[$provider]) &&
+            !in_array($provider, $providers, true)) {
+            $providers[] = $provider;
+        }
+    }
+
+    return $providers;
+}
+
+/**
  * Report whether a provider can be queried in the active Geeklog context.
  */
 function AGENT_providerAvailable($provider)
 {
     global $_PLUGINS;
+
+    if (!AGENT_isEnabled() ||
+        !in_array($provider, AGENT_getEnabledProviders(), true)) {
+        return false;
+    }
 
     $catalog = AGENT_getProviderCatalog();
     if (!isset($catalog[$provider]) || !function_exists('PLG_getItemInfo')) {
@@ -168,9 +198,17 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
  */
 function AGENT_getProviderStatus()
 {
+    global $_PLUGINS;
+
+    $enabled = AGENT_getEnabledProviders();
     $status = array();
     foreach (AGENT_getProviderCatalog() as $provider => $definition) {
+        $installed = $provider === 'stories' ||
+            (is_array($_PLUGINS) && in_array($provider, $_PLUGINS, true));
+
         $status[$provider] = array(
+            'configured' => in_array($provider, $enabled, true),
+            'installed' => $installed,
             'available' => AGENT_providerAvailable($provider),
             'resource_type' => $definition['resource_type'],
             'capabilities' => AGENT_getProviderCapabilities($provider)
