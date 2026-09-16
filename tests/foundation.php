@@ -12,6 +12,7 @@ $required = array(
     'public_html/resource.php',
     'public_html/resource-json.php',
     'public_html/resources-json.php',
+    'public_html/capabilities.php',
     'templates/administration.thtml',
     'language/english.php',
     'lib/text.php',
@@ -20,7 +21,8 @@ $required = array(
     'lib/providers.php',
     'lib/discovery.php',
     'lib/markdown.php',
-    'lib/json.php'
+    'lib/json.php',
+    'lib/capabilities.php'
 );
 
 foreach ($required as $path) {
@@ -62,10 +64,12 @@ $providers = file_get_contents($root . '/lib/providers.php');
 $discovery = file_get_contents($root . '/lib/discovery.php');
 $markdown = file_get_contents($root . '/lib/markdown.php');
 $json = file_get_contents($root . '/lib/json.php');
+$capabilities = file_get_contents($root . '/lib/capabilities.php');
 $publicLlms = file_get_contents($root . '/public_html/llms.php');
 $publicResource = file_get_contents($root . '/public_html/resource.php');
 $publicJsonResource = file_get_contents($root . '/public_html/resource-json.php');
 $publicJsonCollection = file_get_contents($root . '/public_html/resources-json.php');
+$publicCapabilities = file_get_contents($root . '/public_html/capabilities.php');
 
 if (strpos($autoinstall, 'agent.admin') === false || strpos($autoinstall, 'Agent Admin') === false) {
     fwrite(STDERR, 'Required Agent permission/group is missing.' . PHP_EOL);
@@ -75,7 +79,7 @@ if (strpos($functions, 'AGENT_getSiteNamespace') === false || strpos($functions,
     fwrite(STDERR, 'Required multisite/runtime helpers are missing.' . PHP_EOL);
     exit(1);
 }
-foreach (array('lib/text.php', 'lib/compat.php', 'lib/resource.php', 'lib/providers.php', 'lib/discovery.php', 'lib/markdown.php', 'lib/json.php') as $library) {
+foreach (array('lib/text.php', 'lib/compat.php', 'lib/resource.php', 'lib/providers.php', 'lib/discovery.php', 'lib/markdown.php', 'lib/json.php', 'lib/capabilities.php') as $library) {
     if (strpos($functions, $library) === false) {
         fwrite(STDERR, 'Agent library is not wired into runtime: ' . $library . PHP_EOL);
         exit(1);
@@ -120,7 +124,7 @@ if (strpos($providers, "'geeklog_type' => 'staticpages'") === false || strpos($p
     exit(1);
 }
 if (strpos($providers, 'AGENT_getProviderCollectionFields') === false ||
-    strpos($providers, "if ($provider === 'staticpages')") === false ||
+    strpos($providers, "if (\$provider === 'staticpages')") === false ||
     strpos($providers, "'date-modified'") === false) {
     fwrite(STDERR, 'Geeklog 2.1.1-safe Static Pages collection field guard is missing.' . PHP_EOL);
     exit(1);
@@ -168,6 +172,13 @@ if (strpos($json, 'AGENT_buildResourceJson') === false ||
     strpos($publicJsonCollection, 'AGENT_buildCollectionJson') === false ||
     strpos($publicJsonCollection, 'application/json') === false) {
     fwrite(STDERR, 'Agent public JSON resource/collection path is incomplete.' . PHP_EOL);
+    exit(1);
+}
+if (strpos($capabilities, 'AGENT_buildPublicCapabilities') === false ||
+    strpos($publicCapabilities, 'AGENT_buildPublicCapabilities') === false ||
+    strpos($publicCapabilities, 'application/json') === false ||
+    strpos($discovery, '/agent/capabilities.php') === false) {
+    fwrite(STDERR, 'Agent public capability discovery path is incomplete.' . PHP_EOL);
     exit(1);
 }
 
@@ -245,4 +256,4 @@ foreach ($iterator as $fileInfo) {
     }
 }
 
-echo 'Agent 0.x foundation/resource/provider/discovery/markdown/json checks passed.' . PHP_EOL;
+echo 'Agent 0.x foundation/resource/provider/discovery/markdown/json/capability checks passed.' . PHP_EOL;
