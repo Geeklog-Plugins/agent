@@ -50,6 +50,7 @@ jobs:
           test -f package/agent/install_defaults.php
           test -f package/agent/plugin.json
           test -f package/agent/admin/index.php
+          test -f package/agent/templates/administration.thtml
           test -f package/agent/language/english.php
           test -f package/agent/language/english_utf-8.php
 
@@ -81,6 +82,7 @@ jobs:
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/install_defaults.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/plugin.json'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/admin/index.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/templates/administration.thtml'
 
           if unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print; found=1 } } END { exit found ? 0 : 1 }'; then
             echo 'Error: archive contains a dotfile or dot-directory.' >&2
