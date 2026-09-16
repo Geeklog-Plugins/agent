@@ -5,7 +5,7 @@
  *
  * Providers remain authoritative for permissions and URL construction. Agent
  * consumes PLG_getItemInfo() and normalizes the result; compatibility-only
- * metadata fallbacks are isolated outside this provider layer.
+ * metadata/content fallbacks are isolated outside this provider layer.
  *
  * @package Agent
  */
@@ -89,9 +89,6 @@ function AGENT_getProviderCapabilities($provider)
     return $capabilities;
 }
 
-/**
- * Item Info fields requested for one complete resource.
- */
 function AGENT_getProviderItemFields()
 {
     return array(
@@ -110,9 +107,6 @@ function AGENT_getProviderItemFields()
     );
 }
 
-/**
- * Fields safe and inexpensive to request for a provider collection.
- */
 function AGENT_getProviderCollectionFields($provider)
 {
     if ($provider === 'staticpages') {
@@ -183,9 +177,6 @@ function AGENT_mapItemInfoResult($fields, $result)
     return $mapped;
 }
 
-/**
- * Prefer the site's editorial meta description when one exists.
- */
 function AGENT_applyEditorialExcerpt($provider, $id, &$raw)
 {
     if (!is_array($raw) || !function_exists('AGENT_compatMetaDescription')) {
@@ -195,6 +186,28 @@ function AGENT_applyEditorialExcerpt($provider, $id, &$raw)
     $metaDescription = AGENT_compatMetaDescription($provider, $id);
     if ($metaDescription !== '') {
         $raw['excerpt'] = $metaDescription;
+    }
+}
+
+/**
+ * Prefer raw stored editorial HTML after Item Info has authorized the item.
+ */
+function AGENT_applyEditorialContent($provider, $id, &$raw)
+{
+    if (!is_array($raw)) {
+        return;
+    }
+
+    if (function_exists('AGENT_compatRawContent')) {
+        $rawContent = AGENT_compatRawContent($provider, $id);
+        if ($rawContent !== '') {
+            $raw['content'] = $rawContent;
+            return;
+        }
+    }
+
+    if (!empty($raw['description'])) {
+        $raw['content'] = $raw['description'];
     }
 }
 
@@ -221,10 +234,9 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
         return false;
     }
 
-    if (!empty($raw['description'])) {
-        $raw['content'] = $raw['description'];
-    }
-
+    // Item Info is the permission gate. Compatibility enrichment happens only
+    // after this successful permission-aware lookup.
+    AGENT_applyEditorialContent($provider, $id, $raw);
     AGENT_applyEditorialExcerpt($provider, $id, $raw);
     $raw['capabilities'] = AGENT_getProviderCapabilities($provider);
 
@@ -310,11 +322,6 @@ function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
         $resources = array_slice($resources, 0, $limit);
     }
 
-    /*
-     * Only enrich already-authorized selected resources. Static Pages require
-     * single-item hydration on Geeklog 2.1.1 because requesting description in
-     * a '*' collection triggers the historical collection accumulator bug.
-     */
     foreach ($resources as $index => $resource) {
         if ($provider === 'staticpages') {
             $detail = AGENT_getProviderResource($provider, $resource['id'], $uid);
