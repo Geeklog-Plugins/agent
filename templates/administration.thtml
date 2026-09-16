@@ -1,0 +1,15 @@
+<div class="agent-admin">
+    <p>{read_only_notice}</p>
+
+    <p><a href="{configuration_url}">{configuration_label}</a></p>
+
+    <h2>{runtime_label}</h2>
+    <table class="admin-list" style="width:100%">
+        <!-- BEGIN runtime_row -->
+        <tr>
+            <td>{runtime_name}</td>
+            <td>{runtime_value}</td>
+        </tr>
+        <!-- END runtime_row -->
+    </table>
+</div>
