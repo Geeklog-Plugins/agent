@@ -9,11 +9,13 @@ $required = array(
     'plugin.json',
     'admin/index.php',
     'public_html/llms.php',
+    'public_html/resource.php',
     'templates/administration.thtml',
     'language/english.php',
     'lib/resource.php',
     'lib/providers.php',
-    'lib/discovery.php'
+    'lib/discovery.php',
+    'lib/markdown.php'
 );
 
 foreach ($required as $path) {
@@ -51,7 +53,9 @@ $defaults = file_get_contents($root . '/install_defaults.php');
 $language = file_get_contents($root . '/language/english.php');
 $providers = file_get_contents($root . '/lib/providers.php');
 $discovery = file_get_contents($root . '/lib/discovery.php');
+$markdown = file_get_contents($root . '/lib/markdown.php');
 $publicLlms = file_get_contents($root . '/public_html/llms.php');
+$publicResource = file_get_contents($root . '/public_html/resource.php');
 
 if (strpos($autoinstall, 'agent.admin') === false || strpos($autoinstall, 'Agent Admin') === false) {
     fwrite(STDERR, 'Required Agent permission/group is missing.' . PHP_EOL);
@@ -63,26 +67,21 @@ if (strpos($functions, 'AGENT_getSiteNamespace') === false || strpos($functions,
 }
 if (strpos($functions, "lib/resource.php") === false ||
     strpos($functions, "lib/providers.php") === false ||
-    strpos($functions, "lib/discovery.php") === false) {
-    fwrite(STDERR, 'Agent resource/provider/discovery libraries are not wired into runtime.' . PHP_EOL);
+    strpos($functions, "lib/discovery.php") === false ||
+    strpos($functions, "lib/markdown.php") === false) {
+    fwrite(STDERR, 'Agent resource/provider/discovery/markdown libraries are not wired into runtime.' . PHP_EOL);
     exit(1);
 }
 if (strpos($functions, 'plugin_autouninstall_agent') === false) {
     fwrite(STDERR, 'Agent automatic uninstall callback is missing.' . PHP_EOL);
     exit(1);
 }
-if (strpos($admin, 'COM_createHTMLDocument') === false) {
-    fwrite(STDERR, 'Agent admin page must use COM_createHTMLDocument().' . PHP_EOL);
-    exit(1);
-}
-if (strpos($admin, 'administration.thtml') === false) {
-    fwrite(STDERR, 'Agent admin page must render through administration.thtml.' . PHP_EOL);
+if (strpos($admin, 'COM_createHTMLDocument') === false || strpos($admin, 'administration.thtml') === false) {
+    fwrite(STDERR, 'Agent admin rendering contract is incomplete.' . PHP_EOL);
     exit(1);
 }
 
-/* Future controls must not be exposed before their features exist. */
 $prematureControls = array(
-    'markdown_enabled',
     'json_enabled',
     'capabilities_enabled',
     'cache_enabled',
@@ -95,7 +94,6 @@ foreach ($prematureControls as $control) {
     }
 }
 
-/* Discovery controls are now legitimate because the endpoint exists. */
 foreach (array('llms_enabled', 'site_description', 'recent_limit') as $control) {
     if (strpos($defaults, $control) === false) {
         fwrite(STDERR, 'Implemented discovery control missing: ' . $control . PHP_EOL);
@@ -103,13 +101,11 @@ foreach (array('llms_enabled', 'site_description', 'recent_limit') as $control) 
     }
 }
 
-/* Geeklog select arrays use human label => stored value. */
 if (strpos($language, "'Disabled' => 0") === false || strpos($language, "'Enabled'  => 1") === false) {
     fwrite(STDERR, 'Agent boolean Configuration Manager labels are not mapped label => value.' . PHP_EOL);
     exit(1);
 }
 
-/* Initial providers must consume Geeklog contracts, not provider SQL tables. */
 if (strpos($providers, 'PLG_getItemInfo') === false || strpos($providers, "'*'") === false) {
     fwrite(STDERR, 'Agent providers must use PLG_getItemInfo() including collection retrieval.' . PHP_EOL);
     exit(1);
@@ -132,14 +128,21 @@ if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem')
 
 if (strpos($discovery, 'AGENT_getProviderResources') === false ||
     strpos($discovery, 'AGENT_discoveryExcerpt') === false ||
-    strpos($discovery, '[forms:feedback]') !== false ||
+    strpos($discovery, 'AGENT_discoveryMarkdownUrl') === false ||
+    strpos($discovery, "'stories'     => 'Articles'") === false ||
     strpos($publicLlms, 'AGENT_buildLlmsText') === false ||
     strpos($publicLlms, 'text/plain') === false) {
-    fwrite(STDERR, 'Agent public llms discovery path or cleanup is incomplete.' . PHP_EOL);
+    fwrite(STDERR, 'Agent public llms discovery path is incomplete.' . PHP_EOL);
     exit(1);
 }
 
-/* Validate the provider-neutral resource model in isolation. */
+if (strpos($markdown, 'AGENT_buildResourceMarkdown') === false ||
+    strpos($publicResource, 'AGENT_buildResourceMarkdown') === false ||
+    strpos($publicResource, 'text/markdown') === false) {
+    fwrite(STDERR, 'Agent public Markdown resource path is incomplete.' . PHP_EOL);
+    exit(1);
+}
+
 require_once $root . '/lib/resource.php';
 $sample = AGENT_normalizeResource(
     'stories',
@@ -148,7 +151,8 @@ $sample = AGENT_normalizeResource(
         'id' => 'example',
         'title' => 'Example',
         'url' => 'https://example.test/article',
-        'description' => 'Summary',
+        'description' => 'Full body',
+        'excerpt' => 'Summary',
         'date-created' => '2026-01-01',
         'date-modified' => '2026-01-02',
         'capabilities' => array('content.read', 'content.read')
@@ -158,6 +162,7 @@ if (!is_array($sample) ||
     $sample['schema_version'] !== '1' ||
     $sample['provider'] !== 'stories' ||
     $sample['excerpt'] !== 'Summary' ||
+    $sample['content'] !== 'Full body' ||
     $sample['created'] !== '2026-01-01' ||
     $sample['modified'] !== '2026-01-02' ||
     $sample['canonical_url'] !== 'https://example.test/article' ||
@@ -167,14 +172,10 @@ if (!is_array($sample) ||
     exit(1);
 }
 
-/* Rendering convention guard across every runtime PHP/INC file. */
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
 );
-$legacyRenderingCalls = array(
-    'COM_' . 'siteHeader' . '(',
-    'COM_' . 'siteFooter' . '('
-);
+$legacyRenderingCalls = array('COM_' . 'siteHeader' . '(', 'COM_' . 'siteFooter' . '(');
 
 foreach ($iterator as $fileInfo) {
     if (!$fileInfo->isFile()) {
@@ -183,10 +184,7 @@ foreach ($iterator as $fileInfo) {
 
     $path = $fileInfo->getPathname();
     $relative = str_replace('\\', '/', substr($path, strlen($root) + 1));
-
-    if (strpos($relative, 'tests/') === 0 ||
-        strpos($relative, '.github/') === 0 ||
-        strpos($relative, 'dist/') === 0) {
+    if (strpos($relative, 'tests/') === 0 || strpos($relative, '.github/') === 0 || strpos($relative, 'dist/') === 0) {
         continue;
     }
 
@@ -198,13 +196,10 @@ foreach ($iterator as $fileInfo) {
     $source = file_get_contents($path);
     foreach ($legacyRenderingCalls as $call) {
         if (strpos($source, $call) !== false) {
-            fwrite(
-                STDERR,
-                'Legacy page rendering call ' . $call . ' is not allowed in Agent runtime file: ' . $relative . PHP_EOL
-            );
+            fwrite(STDERR, 'Legacy page rendering call ' . $call . ' is not allowed in Agent runtime file: ' . $relative . PHP_EOL);
             exit(1);
         }
     }
 }
 
-echo 'Agent 0.x foundation/resource/provider/discovery checks passed.' . PHP_EOL;
+echo 'Agent 0.x foundation/resource/provider/discovery/markdown checks passed.' . PHP_EOL;
