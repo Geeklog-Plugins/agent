@@ -90,11 +90,6 @@ if (strpos($admin, 'COM_createHTMLDocument') === false || strpos($admin, 'admini
     exit(1);
 }
 
-/*
- * Future controls may legitimately appear in install_defaults.php only inside
- * the obsolete-key cleanup list. They are considered exposed only when they
- * exist as active defaults or are added through Configuration Manager.
- */
 $prematureControls = array('json_enabled', 'capabilities_enabled', 'cache_enabled', 'authenticated_access');
 foreach ($prematureControls as $control) {
     if (strpos($configSource, "'" . $control . "'") !== false ||
@@ -166,6 +161,7 @@ if (strpos($markdown, 'AGENT_buildResourceMarkdown') === false ||
 }
 if (strpos($json, 'AGENT_buildResourceJson') === false ||
     strpos($json, 'AGENT_buildCollectionJson') === false ||
+    strpos($json, 'AGENT_jsonDate') === false ||
     strpos($json, 'content_format') === false ||
     strpos($publicJsonResource, 'AGENT_buildResourceJson') === false ||
     strpos($publicJsonResource, 'application/json') === false ||
@@ -190,8 +186,8 @@ $sample = AGENT_normalizeResource(
         'description' => '<h2>Full body</h2><ul><li>Item</li></ul>',
         'excerpt' => 'Summary',
         'type' => '',
-        'date-created' => '2026-01-01',
-        'date-modified' => '2026-01-02',
+        'date-created' => '1789535503',
+        'date-modified' => '1789535503',
         'capabilities' => array('content.read', 'content.read')
     )
 );
@@ -201,8 +197,8 @@ if (!is_array($sample) ||
     $sample['type'] !== 'story' ||
     $sample['excerpt'] !== 'Summary' ||
     $sample['content'] !== '<h2>Full body</h2><ul><li>Item</li></ul>' ||
-    $sample['created'] !== '2026-01-01' ||
-    $sample['modified'] !== '2026-01-02' ||
+    $sample['created'] !== '1789535503' ||
+    $sample['modified'] !== '1789535503' ||
     $sample['canonical_url'] !== 'https://example.test/article' ||
     count($sample['capabilities']) !== 1 ||
     AGENT_getResourceIdentity($sample) !== 'stories:story:example') {
@@ -217,6 +213,8 @@ if (strpos($cleaned, 'adsbygoogle') !== false || strpos($cleaned, 'Hello') === f
 $jsonSample = AGENT_jsonResourceData($sample, true);
 if (!is_array($jsonSample) ||
     !isset($jsonSample['content_format']) || $jsonSample['content_format'] !== 'markdown' ||
+    $jsonSample['created'] !== gmdate('c', 1789535503) ||
+    $jsonSample['modified'] !== gmdate('c', 1789535503) ||
     strpos($jsonSample['content'], '### Full body') === false ||
     strpos($jsonSample['content'], '- Item') === false) {
     fwrite(STDERR, 'Agent JSON resource adapter failed.' . PHP_EOL);
