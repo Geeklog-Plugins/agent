@@ -18,6 +18,8 @@ global $_CONF, $_AGENT_CONF;
 
 $agent_path = $_CONF['path'] . 'plugins/agent/';
 require_once $agent_path . 'config.php';
+require_once $agent_path . 'lib/text.php';
+require_once $agent_path . 'lib/compat.php';
 require_once $agent_path . 'lib/resource.php';
 require_once $agent_path . 'lib/providers.php';
 require_once $agent_path . 'lib/discovery.php';
