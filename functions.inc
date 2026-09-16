@@ -24,6 +24,7 @@ require_once $agent_path . 'lib/resource.php';
 require_once $agent_path . 'lib/providers.php';
 require_once $agent_path . 'lib/discovery.php';
 require_once $agent_path . 'lib/markdown.php';
+require_once $agent_path . 'lib/json.php';
 
 $agent_langfile = $agent_path . 'language/' . $_CONF['language'] . '.php';
 if (file_exists($agent_langfile)) {
@@ -117,6 +118,8 @@ function AGENT_getRuntimeCapabilities()
     $capabilities['provider_layer'] = function_exists('AGENT_getProviderCatalog');
     $capabilities['public_llms_discovery'] = function_exists('AGENT_buildLlmsText');
     $capabilities['public_markdown_resources'] = function_exists('AGENT_buildResourceMarkdown');
+    $capabilities['public_json_resources'] = function_exists('AGENT_buildResourceJson');
+    $capabilities['public_json_collections'] = function_exists('AGENT_buildCollectionJson');
 
     return $capabilities;
 }
