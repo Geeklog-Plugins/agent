@@ -8,15 +8,17 @@ $required = array(
     'functions.inc',
     'plugin.json',
     'admin/index.php',
+    'public_html/llms.php',
     'templates/administration.thtml',
     'language/english.php',
     'lib/resource.php',
-    'lib/providers.php'
+    'lib/providers.php',
+    'lib/discovery.php'
 );
 
 foreach ($required as $path) {
     if (!is_file($root . DIRECTORY_SEPARATOR . $path)) {
-        fwrite(STDERR, 'Missing required foundation file: ' . $path . PHP_EOL);
+        fwrite(STDERR, 'Missing required Agent file: ' . $path . PHP_EOL);
         exit(1);
     }
 }
@@ -48,6 +50,8 @@ $admin = file_get_contents($root . '/admin/index.php');
 $defaults = file_get_contents($root . '/install_defaults.php');
 $language = file_get_contents($root . '/language/english.php');
 $providers = file_get_contents($root . '/lib/providers.php');
+$discovery = file_get_contents($root . '/lib/discovery.php');
+$publicLlms = file_get_contents($root . '/public_html/llms.php');
 
 if (strpos($autoinstall, 'agent.admin') === false || strpos($autoinstall, 'Agent Admin') === false) {
     fwrite(STDERR, 'Required Agent permission/group is missing.' . PHP_EOL);
@@ -57,8 +61,10 @@ if (strpos($functions, 'AGENT_getSiteNamespace') === false || strpos($functions,
     fwrite(STDERR, 'Required multisite/runtime helpers are missing.' . PHP_EOL);
     exit(1);
 }
-if (strpos($functions, "lib/resource.php") === false || strpos($functions, "lib/providers.php") === false) {
-    fwrite(STDERR, 'Agent normalized resource/provider libraries are not wired into runtime.' . PHP_EOL);
+if (strpos($functions, "lib/resource.php") === false ||
+    strpos($functions, "lib/providers.php") === false ||
+    strpos($functions, "lib/discovery.php") === false) {
+    fwrite(STDERR, 'Agent resource/provider/discovery libraries are not wired into runtime.' . PHP_EOL);
     exit(1);
 }
 if (strpos($admin, 'COM_createHTMLDocument') === false) {
@@ -72,7 +78,6 @@ if (strpos($admin, 'administration.thtml') === false) {
 
 /* Future controls must not be exposed before their features exist. */
 $prematureControls = array(
-    'llms_enabled',
     'markdown_enabled',
     'json_enabled',
     'capabilities_enabled',
@@ -86,6 +91,14 @@ foreach ($prematureControls as $control) {
     }
 }
 
+/* Discovery controls are now legitimate because the endpoint exists. */
+foreach (array('llms_enabled', 'site_description', 'recent_limit') as $control) {
+    if (strpos($defaults, $control) === false) {
+        fwrite(STDERR, 'Implemented discovery control missing: ' . $control . PHP_EOL);
+        exit(1);
+    }
+}
+
 /* Geeklog select arrays use human label => stored value. */
 if (strpos($language, "'Disabled' => 0") === false || strpos($language, "'Enabled'  => 1") === false) {
     fwrite(STDERR, 'Agent boolean Configuration Manager labels are not mapped label => value.' . PHP_EOL);
@@ -93,13 +106,20 @@ if (strpos($language, "'Disabled' => 0") === false || strpos($language, "'Enable
 }
 
 /* Initial providers must consume Geeklog contracts, not provider SQL tables. */
-if (strpos($providers, 'PLG_getItemInfo') === false) {
-    fwrite(STDERR, 'Agent providers must use PLG_getItemInfo().' . PHP_EOL);
+if (strpos($providers, 'PLG_getItemInfo') === false || strpos($providers, "'*'") === false) {
+    fwrite(STDERR, 'Agent providers must use PLG_getItemInfo() including collection retrieval.' . PHP_EOL);
     exit(1);
 }
 if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem') !== false ||
     strpos($providers, '$_TABLES') !== false) {
     fwrite(STDERR, 'Initial Agent providers must not query Geeklog/plugin tables directly.' . PHP_EOL);
+    exit(1);
+}
+
+if (strpos($discovery, 'AGENT_getProviderResources') === false ||
+    strpos($publicLlms, 'AGENT_buildLlmsText') === false ||
+    strpos($publicLlms, 'text/plain') === false) {
+    fwrite(STDERR, 'Agent public llms discovery path is incomplete.' . PHP_EOL);
     exit(1);
 }
 
@@ -131,12 +151,7 @@ if (!is_array($sample) ||
     exit(1);
 }
 
-/*
- * Rendering convention guard.
- *
- * Agent targets Geeklog 2.1.1 through 2.2.2. New/modernized HTML pages must
- * use COM_createHTMLDocument() rather than the legacy page assembly path.
- */
+/* Rendering convention guard across every runtime PHP/INC file. */
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
 );
@@ -176,4 +191,4 @@ foreach ($iterator as $fileInfo) {
     }
 }
 
-echo 'Agent 0.x foundation/resource/provider checks passed.' . PHP_EOL;
+echo 'Agent 0.x foundation/resource/provider/discovery checks passed.' . PHP_EOL;
