@@ -100,7 +100,7 @@ function AGENT_getProviderCapabilities($provider)
 }
 
 /**
- * Common Item Info fields requested from owning providers.
+ * Common Item Info fields requested for one resource.
  */
 function AGENT_getProviderItemFields()
 {
@@ -117,6 +117,28 @@ function AGENT_getProviderItemFields()
         'type',
         'subtype'
     );
+}
+
+/**
+ * Fields safe to request for a provider collection.
+ *
+ * Geeklog 2.1.1 Static Pages has a core bug in
+ * plugin_getiteminfo_staticpages('*', ...): requesting description/excerpt
+ * resets its collection accumulator to a string before using [] on it. Keep
+ * collection discovery to metadata, then hydrate selected pages individually.
+ */
+function AGENT_getProviderCollectionFields($provider)
+{
+    if ($provider === 'staticpages') {
+        return array(
+            'id',
+            'title',
+            'url',
+            'date-modified'
+        );
+    }
+
+    return AGENT_getProviderItemFields();
 }
 
 /**
@@ -202,10 +224,28 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
 }
 
 /**
+ * Sort normalized resources by modified date, newest first.
+ */
+function AGENT_sortResourcesModifiedDesc(&$resources)
+{
+    usort($resources, function ($a, $b) {
+        $aValue = isset($a['modified']) ? $a['modified'] : '';
+        $bValue = isset($b['modified']) ? $b['modified'] : '';
+        $aTime = is_numeric($aValue) ? (int) $aValue : strtotime((string) $aValue);
+        $bTime = is_numeric($bValue) ? (int) $bValue : strtotime((string) $bValue);
+        if ($aTime === $bTime) {
+            return 0;
+        }
+        return ($aTime > $bTime) ? -1 : 1;
+    });
+}
+
+/**
  * Read a collection through Geeklog's Item Info '*' convention.
  *
- * Options are passed through to the owning provider so it can enforce its own
- * supported filters/order while preserving ACL and publication rules.
+ * Options are passed through to the owning provider where supported. Agent
+ * still applies its own final sort/limit because older Geeklog callbacks such
+ * as Static Pages 2.1.1 ignore collection options.
  */
 function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
 {
@@ -222,13 +262,12 @@ function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
         $options = array();
     }
 
-    if (isset($options['limit'])) {
-        $options['limit'] = max(1, min(100, (int) $options['limit']));
-    }
+    $limit = isset($options['limit']) ? max(1, min(100, (int) $options['limit'])) : 100;
+    $options['limit'] = $limit;
 
     $catalog = AGENT_getProviderCatalog();
     $definition = $catalog[$provider];
-    $fields = AGENT_getProviderItemFields();
+    $fields = AGENT_getProviderCollectionFields($provider);
 
     $result = PLG_getItemInfo(
         $definition['geeklog_type'],
@@ -257,6 +296,28 @@ function AGENT_getProviderResources($provider, $options = array(), $uid = 0)
         );
         if ($resource !== false) {
             $resources[] = $resource;
+        }
+    }
+
+    if (isset($options['order']) && $options['order'] === 'modified-desc') {
+        AGENT_sortResourcesModifiedDesc($resources);
+    }
+
+    if (count($resources) > $limit) {
+        $resources = array_slice($resources, 0, $limit);
+    }
+
+    /*
+     * Hydrate only the selected Static Pages. A single-item Item Info request
+     * does not trigger the Geeklog 2.1.1 collection accumulator bug and keeps
+     * ACL/content ownership inside the Static Pages plugin.
+     */
+    if ($provider === 'staticpages') {
+        foreach ($resources as $index => $resource) {
+            $detail = AGENT_getProviderResource($provider, $resource['id'], $uid);
+            if (is_array($detail)) {
+                $resources[$index] = array_merge($resource, $detail);
+            }
         }
     }
 
