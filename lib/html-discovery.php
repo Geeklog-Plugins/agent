@@ -31,9 +31,9 @@ function AGENT_htmlDiscoveryRequestContext($server, $request)
         $storyId = trim((string) COM_getArgument('story'));
     }
     if ($storyId === '') {
-        if (preg_match('#/(?:article\.php|article)/([^/?#]+)#i', $path, $match)) {
+        if (preg_match('~/(?:article\.php|article)/([^/?#]+)~i', $path, $match)) {
             $storyId = rawurldecode($match[1]);
-        } elseif (preg_match('#/index\.php/article/([^/?#]+)#i', $path, $match)) {
+        } elseif (preg_match('~/index\.php/article/([^/?#]+)~i', $path, $match)) {
             $storyId = rawurldecode($match[1]);
         }
     }
@@ -46,9 +46,9 @@ function AGENT_htmlDiscoveryRequestContext($server, $request)
         $pageId = trim((string) COM_getArgument('page'));
     }
     if ($pageId === '') {
-        if (preg_match('#/staticpages/index\.php/([^/?#]+)#i', $path, $match)) {
+        if (preg_match('~/staticpages/index\.php/([^/?#]+)~i', $path, $match)) {
             $pageId = rawurldecode($match[1]);
-        } elseif (preg_match('#/index\.php/staticpages/([^/?#]+)#i', $path, $match)) {
+        } elseif (preg_match('~/index\.php/staticpages/([^/?#]+)~i', $path, $match)) {
             $pageId = rawurldecode($match[1]);
         }
     }
