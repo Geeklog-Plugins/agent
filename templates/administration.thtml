@@ -1,0 +1,86 @@
+<style>
+.agent-admin{max-width:1180px;margin:0 auto}.agent-admin *{box-sizing:border-box}.agent-admin-header{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;margin-bottom:1.25rem}.agent-admin-header p{margin:.35rem 0 0;max-width:780px}.agent-admin .agent-button{display:inline-block;padding:.55rem .9rem;border:1px solid #b9b9b9;border-radius:4px;text-decoration:none;background:#fff;color:#222!important;-webkit-appearance:none;appearance:none;cursor:pointer;line-height:1.3}.agent-admin .agent-button:visited{color:#222!important}.agent-admin .agent-button:hover,.agent-admin .agent-button:focus{background:#f1f1f1;color:#111!important;border-color:#999;text-decoration:none}.agent-admin .agent-button:focus{outline:2px solid currentColor;outline-offset:2px}.agent-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin:1rem 0 1.5rem}.agent-card{border:1px solid #d7d7d7;border-radius:6px;padding:1rem;background:#fff}.agent-card h3{margin:0 0 .55rem;font-size:1rem}.agent-card p{margin:.25rem 0}.agent-status{display:inline-block;padding:.2rem .55rem;border-radius:999px;font-weight:bold}.agent-status-ok{background:#e7f7ea;color:#205d2a}.agent-status-off{background:#fbe9e7;color:#8a2b20}.agent-panel{border:1px solid #d7d7d7;border-radius:6px;padding:1rem;margin:0 0 1.25rem;background:#fff}.agent-panel h2{margin-top:0}.agent-note{padding:.75rem 1rem;border-left:4px solid #bbb;background:#f7f7f7;margin:.75rem 0 1.25rem}.agent-table{width:100%;border-collapse:collapse}.agent-table th,.agent-table td{padding:.6rem .7rem;border-bottom:1px solid #e5e5e5;text-align:left;vertical-align:top}.agent-table th{font-weight:bold}.agent-table td:last-child{white-space:nowrap;width:1%}.agent-table code{word-break:break-all}.agent-code{overflow:auto;padding:.75rem;background:#f5f5f5;border:1px solid #e2e2e2;border-radius:4px}.agent-actions{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:.75rem}.agent-muted{opacity:.75}@media(max-width:700px){.agent-admin-header{display:block}.agent-admin-header form{margin-top:1rem}.agent-table,.agent-table tbody,.agent-table tr,.agent-table td{display:block;width:100%}.agent-table td:last-child{width:100%;padding-top:0}.agent-table th{display:none}}
+</style>
+
+<div class="agent-admin">
+    <div class="agent-admin-header">
+        <div>
+            <h1>{admin_title}</h1>
+            <p>{admin_intro}</p>
+        </div>
+        <form method="post" action="{configuration_url}">
+            <input type="hidden" name="conf_group" value="agent">
+            <button type="submit" class="agent-button">{configuration_label}</button>
+        </form>
+    </div>
+
+    <div class="agent-note">{read_only_notice}</div>
+
+    <div class="agent-grid">
+        <div class="agent-card">
+            <h3>{status_label}</h3>
+            <p><span class="agent-status {status_class}">{status_value}</span></p>
+        </div>
+        <div class="agent-card">
+            <h3>{active_site_label}</h3>
+            <p>{active_site_value}</p>
+        </div>
+        <div class="agent-card">
+            <h3>{enabled_providers_label}</h3>
+            <p>{enabled_providers_value}</p>
+        </div>
+        <div class="agent-card">
+            <h3>{recent_resources_label}</h3>
+            <p>{recent_resources_value}</p>
+        </div>
+        <div class="agent-card">
+            <h3>{description_source_label}</h3>
+            <p>{description_source_value}</p>
+        </div>
+    </div>
+
+    <section class="agent-panel">
+        <h2>{public_endpoints_label}</h2>
+        <p class="agent-muted">{public_endpoints_intro}</p>
+        <table class="agent-table">
+            <tbody>
+                <!-- BEGIN endpoint_row -->
+                <tr>
+                    <td><strong>{endpoint_name}</strong><br><code>{endpoint_url}</code></td>
+                    <td><a class="agent-button" href="{endpoint_url}" target="_blank" rel="noopener">{open_endpoint_label}</a></td>
+                </tr>
+                <!-- END endpoint_row -->
+            </tbody>
+        </table>
+    </section>
+
+    <section class="agent-panel">
+        <h2>{discovery_setup_label}</h2>
+        <p>{discovery_setup_intro}</p>
+        <pre class="agent-code"><code>{discovery_rewrite_rule}</code></pre>
+        <p class="agent-muted">{discovery_rewrite_note}</p>
+        <details>
+            <summary>{discovery_rewrite_example_label}</summary>
+            <pre class="agent-code"><code>{discovery_rewrite_example}</code></pre>
+        </details>
+        <div class="agent-actions">
+            <a class="agent-button" href="{discovery_test_url}" target="_blank" rel="noopener">{discovery_test_label}</a>
+            <a class="agent-button" href="{discovery_direct_url}" target="_blank" rel="noopener">{discovery_direct_label}</a>
+        </div>
+    </section>
+
+    <section class="agent-panel">
+        <h2>{runtime_label}</h2>
+        <p class="agent-muted">{runtime_intro}</p>
+        <table class="agent-table">
+            <tbody>
+                <!-- BEGIN runtime_row -->
+                <tr>
+                    <td>{runtime_name}</td>
+                    <td>{runtime_value}</td>
+                </tr>
+                <!-- END runtime_row -->
+            </tbody>
+        </table>
+    </section>
+</div>
