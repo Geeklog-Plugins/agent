@@ -67,6 +67,10 @@ if (strpos($functions, "lib/resource.php") === false ||
     fwrite(STDERR, 'Agent resource/provider/discovery libraries are not wired into runtime.' . PHP_EOL);
     exit(1);
 }
+if (strpos($functions, 'plugin_autouninstall_agent') === false) {
+    fwrite(STDERR, 'Agent automatic uninstall callback is missing.' . PHP_EOL);
+    exit(1);
+}
 if (strpos($admin, 'COM_createHTMLDocument') === false) {
     fwrite(STDERR, 'Agent admin page must use COM_createHTMLDocument().' . PHP_EOL);
     exit(1);
@@ -110,6 +114,10 @@ if (strpos($providers, 'PLG_getItemInfo') === false || strpos($providers, "'*'")
     fwrite(STDERR, 'Agent providers must use PLG_getItemInfo() including collection retrieval.' . PHP_EOL);
     exit(1);
 }
+if (strpos($providers, "'staticpages'") === false || strpos($providers, "'geeklog_type' => 'staticpages'") === false) {
+    fwrite(STDERR, 'Static Pages provider definition is missing.' . PHP_EOL);
+    exit(1);
+}
 if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem') !== false ||
     strpos($providers, '$_TABLES') !== false) {
     fwrite(STDERR, 'Initial Agent providers must not query Geeklog/plugin tables directly.' . PHP_EOL);
@@ -117,9 +125,11 @@ if (strpos($providers, 'DB_query') !== false || strpos($providers, 'DB_getItem')
 }
 
 if (strpos($discovery, 'AGENT_getProviderResources') === false ||
+    strpos($discovery, 'AGENT_discoveryExcerpt') === false ||
+    strpos($discovery, '[forms:feedback]') !== false ||
     strpos($publicLlms, 'AGENT_buildLlmsText') === false ||
     strpos($publicLlms, 'text/plain') === false) {
-    fwrite(STDERR, 'Agent public llms discovery path is incomplete.' . PHP_EOL);
+    fwrite(STDERR, 'Agent public llms discovery path or cleanup is incomplete.' . PHP_EOL);
     exit(1);
 }
 
