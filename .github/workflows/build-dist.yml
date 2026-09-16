@@ -64,6 +64,7 @@ jobs:
           test -f package/agent/lib/json.php
           test -f package/agent/lib/hub.php
           test -f package/agent/lib/capabilities.php
+          test -f package/agent/lib/html-discovery.php
 
           if find package/agent -mindepth 1 -name '.*' -print -quit | grep -q .; then
             echo 'Error: dotfile or dot-directory found in package tree.' >&2
@@ -108,6 +109,7 @@ jobs:
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/json.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/hub.php'
           unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/capabilities.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/lib/html-discovery.php'
 
           if unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print; found=1 } } END { exit found ? 0 : 1 }'; then
             echo 'Error: archive contains a dotfile or dot-directory.' >&2
