@@ -5,17 +5,22 @@
  */
 
 $LANG_AGENT = array(
-    'plugin_name'          => 'Agent',
-    'admin_title'          => 'Agent Administration',
-    'status'               => 'Agent status',
-    'configuration'        => 'Configuration',
-    'runtime'              => 'Runtime',
-    'site_namespace'       => 'Site namespace',
-    'cache_path'           => 'Future site cache path',
-    'read_only_notice'     => 'Agent exposes an initial public llms-style discovery endpoint at /agent/llms.php. Markdown and JSON resource endpoints are not exposed yet.',
-    'access_denied'        => 'You do not have permission to administer Agent.',
-    'available'            => 'Available',
-    'unavailable'          => 'Unavailable'
+    'plugin_name'              => 'Agent',
+    'admin_title'              => 'Agent Administration',
+    'status'                   => 'Agent status',
+    'configuration'            => 'Configuration',
+    'runtime'                  => 'Runtime',
+    'site_namespace'           => 'Site namespace',
+    'cache_path'               => 'Future site cache path',
+    'read_only_notice'         => 'Agent exposes an initial public llms-style discovery endpoint at /agent/llms.php. Markdown and JSON resource endpoints are not exposed yet.',
+    'discovery_setup'          => 'Public discovery setup',
+    'discovery_setup_intro'    => 'To expose the canonical /llms.txt URL, add this rule to the site .htaccess file:',
+    'discovery_rewrite_rule'   => 'RewriteRule ^llms\\.txt$ /agent/llms.php [L]',
+    'discovery_test'           => 'Test /llms.txt',
+    'discovery_direct'         => 'Direct Agent endpoint',
+    'access_denied'            => 'You do not have permission to administer Agent.',
+    'available'                => 'Available',
+    'unavailable'              => 'Unavailable'
 );
 
 $LANG_configsections['agent'] = array(
