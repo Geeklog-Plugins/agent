@@ -1,0 +1,119 @@
+name: Build installable archive
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop-1.0
+    paths-ignore:
+      - 'dist/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build agent_0.1.0_2.1.1.zip
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          ref: develop-1.0
+
+      - name: Prepare installable plugin tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf package dist
+          mkdir -p package/agent dist
+
+          # Keep the installable archive limited to plugin runtime files.
+          # Dotfiles/directories are excluded because Geeklog plugin uploads
+          # should not contain repository metadata such as .github or .git.
+          rsync -a ./ package/agent/ \
+            --exclude='.*' \
+            --exclude='package/' \
+            --exclude='dist/' \
+            --exclude='tests/'
+
+          find package/agent -depth -name '.*' -print -delete
+
+      - name: Validate package structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f package/agent/config.php
+          test -f package/agent/autoinstall.php
+          test -f package/agent/functions.inc
+          test -f package/agent/install_defaults.php
+          test -f package/agent/plugin.json
+          test -f package/agent/admin/index.php
+          test -f package/agent/language/english.php
+          test -f package/agent/language/english_utf-8.php
+
+          if find package/agent -mindepth 1 -name '.*' -print -quit | grep -q .; then
+            echo 'Error: dotfile or dot-directory found in package tree.' >&2
+            find package/agent -mindepth 1 -name '.*' -print >&2
+            exit 1
+          fi
+
+      - name: Build ZIP in dist
+        shell: bash
+        run: |
+          set -euo pipefail
+          (
+            cd package
+            zip -r -9 ../dist/agent_0.1.0_2.1.1.zip agent
+          )
+
+      - name: Validate ZIP contents
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARCHIVE='dist/agent_0.1.0_2.1.1.zip'
+          test -s "$ARCHIVE"
+          unzip -t "$ARCHIVE"
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/config.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/autoinstall.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/functions.inc'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/install_defaults.php'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/plugin.json'
+          unzip -Z1 "$ARCHIVE" | grep -qx 'agent/admin/index.php'
+
+          if unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print; found=1 } } END { exit found ? 0 : 1 }'; then
+            echo 'Error: archive contains a dotfile or dot-directory.' >&2
+            unzip -Z1 "$ARCHIVE" | awk -F/ '{ for (i = 1; i <= NF; i++) if ($i ~ /^\./) { print } }' >&2
+            exit 1
+          fi
+
+      - name: Show distribution
+        shell: bash
+        run: |
+          ls -lh dist/
+          sha256sum dist/agent_0.1.0_2.1.1.zip
+
+      - name: Commit dist archive to branch
+        if: github.ref == 'refs/heads/develop-1.0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -f dist/agent_0.1.0_2.1.1.zip
+
+          if git diff --cached --quiet; then
+            echo 'Distribution archive is already up to date.'
+          else
+            git commit -m 'Update Agent 0.1.0 distribution archive'
+            git push origin HEAD:develop-1.0
+          fi
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent_0.1.0_2.1.1-dist
+          path: dist/agent_0.1.0_2.1.1.zip
+          if-no-files-found: error
+          retention-days: 30
