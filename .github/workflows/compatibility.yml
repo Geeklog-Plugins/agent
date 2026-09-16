@@ -37,3 +37,6 @@ jobs:
 
       - name: Check optional Hub integration
         run: php tests/hub.php
+
+      - name: Check HTML machine discovery
+        run: php tests/html_discovery.php
