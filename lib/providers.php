@@ -18,11 +18,13 @@ function AGENT_getProviderCatalog()
     return array(
         'stories' => array(
             'geeklog_type' => 'story',
-            'resource_type' => 'story'
+            'resource_type' => 'story',
+            'label'         => 'Stories'
         ),
         'staticpages' => array(
             'geeklog_type' => 'staticpages',
-            'resource_type' => 'staticpage'
+            'resource_type' => 'staticpage',
+            'label'         => 'Static Pages'
         )
     );
 }
@@ -100,7 +102,7 @@ function AGENT_getProviderCapabilities($provider)
 }
 
 /**
- * Common Item Info fields requested for one resource.
+ * Item Info fields requested for one complete resource.
  */
 function AGENT_getProviderItemFields()
 {
@@ -108,6 +110,7 @@ function AGENT_getProviderItemFields()
         'id',
         'title',
         'url',
+        'excerpt',
         'description',
         'date-created',
         'date-modified',
@@ -120,12 +123,15 @@ function AGENT_getProviderItemFields()
 }
 
 /**
- * Fields safe to request for a provider collection.
+ * Fields safe and inexpensive to request for a provider collection.
  *
  * Geeklog 2.1.1 Static Pages has a core bug in
  * plugin_getiteminfo_staticpages('*', ...): requesting description/excerpt
  * resets its collection accumulator to a string before using [] on it. Keep
  * collection discovery to metadata, then hydrate selected pages individually.
+ *
+ * Stories can expose `excerpt` directly; avoid requesting their full
+ * `description` for every collection item merely to build /llms.txt.
  */
 function AGENT_getProviderCollectionFields($provider)
 {
@@ -135,6 +141,22 @@ function AGENT_getProviderCollectionFields($provider)
             'title',
             'url',
             'date-modified'
+        );
+    }
+
+    if ($provider === 'stories') {
+        return array(
+            'id',
+            'title',
+            'url',
+            'excerpt',
+            'date-created',
+            'date-modified',
+            'uid',
+            'author',
+            'hits',
+            'type',
+            'subtype'
         );
     }
 
@@ -211,6 +233,11 @@ function AGENT_getProviderResource($provider, $id, $uid = 0)
     $raw = AGENT_mapItemInfoResult($fields, $result);
     if (empty($raw) || empty($raw['url'])) {
         return false;
+    }
+
+    // Item Info `description` is the owning provider's complete readable body.
+    if (!empty($raw['description'])) {
+        $raw['content'] = $raw['description'];
     }
 
     $raw['capabilities'] = AGENT_getProviderCapabilities($provider);
