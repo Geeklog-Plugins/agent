@@ -23,23 +23,29 @@ $LANG_configsections['agent'] = array(
     'title' => 'Agent Configuration'
 );
 
-$LANG_configsubgroups['agent']['sg_main'] = 'Agent';
+$LANG_configsubgroups['agent'] = array(
+    'sg_main' => 'Agent'
+);
 
-$LANG_tab['agent']['general'] = 'General';
-$LANG_tab['agent']['discovery'] = 'Discovery / llms.txt';
-$LANG_tab['agent']['providers'] = 'Providers';
-$LANG_tab['agent']['resources'] = 'Resources';
-$LANG_tab['agent']['capabilities'] = 'Capabilities';
-$LANG_tab['agent']['cache'] = 'Cache';
-$LANG_tab['agent']['security'] = 'Security';
+$LANG_tab['agent'] = array(
+    'tab_general'      => 'General',
+    'tab_discovery'    => 'Discovery / llms.txt',
+    'tab_providers'    => 'Providers',
+    'tab_resources'    => 'Resources',
+    'tab_capabilities' => 'Capabilities',
+    'tab_cache'        => 'Cache',
+    'tab_security'     => 'Security'
+);
 
-$LANG_fs['agent']['general'] = 'General';
-$LANG_fs['agent']['discovery'] = 'Discovery / llms.txt';
-$LANG_fs['agent']['providers'] = 'Providers';
-$LANG_fs['agent']['resources'] = 'Resources';
-$LANG_fs['agent']['capabilities'] = 'Capabilities';
-$LANG_fs['agent']['cache'] = 'Cache';
-$LANG_fs['agent']['security'] = 'Security';
+$LANG_fs['agent'] = array(
+    'fs_general'      => 'General',
+    'fs_discovery'    => 'Discovery / llms.txt',
+    'fs_providers'    => 'Providers',
+    'fs_resources'    => 'Resources',
+    'fs_capabilities' => 'Capabilities',
+    'fs_cache'        => 'Cache',
+    'fs_security'     => 'Security'
+);
 
 $LANG_confignames['agent'] = array(
     'enabled'                 => 'Enable Agent foundation',
@@ -56,4 +62,9 @@ $LANG_confignames['agent'] = array(
     'cache_ttl'               => 'Cache TTL in seconds',
     'public_read_only'        => 'Restrict public surface to read-only',
     'authenticated_access'    => 'Enable authenticated access (future)'
+);
+
+$LANG_configselects['agent'][0] = array(
+    0 => 'Disabled',
+    1 => 'Enabled'
 );
